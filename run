@@ -1,0 +1,2 @@
+
+~/misc/hw/tdeck/esptool --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 .pio/build/T-Deck-Pro/firmware.bin
