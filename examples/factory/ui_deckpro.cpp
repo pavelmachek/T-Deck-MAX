@@ -136,8 +136,9 @@ static struct menu_btn menu_btn_list[] =
     {SCREEN8_ID,  &img_A7682E,  "Phone",    95,     189},
     {SCREEN9_ID,  &img_lora,    "Shutdown", 167,    189},
     {SCREEN10_ID, &img_music,   "Music",    23,     13},  // Page two
-    {SCREEN11_ID, &img_sleep,   "Sleep",    95,     13},  // 
-    {SCREEN12_ID, &img_motor,   "Motor",    167,    13},  // 
+    {SCREEN11_ID, &img_sleep,   "Sleep",    95,     13},
+    {SCREEN12_ID, &img_motor,   "Motor",    167,    13},
+    {SCREEN13_ID, &img_test,    "Lua",      23,     101},
 };
 
 static void menu_btn_event_cb(lv_event_t *e)
@@ -3746,6 +3747,72 @@ static scr_lifecycle_t screen12 = {
     .destroy = destroy12,
 };
 #endif
+//************************************[ screen 13 ]****************************************** Lua
+#if 1
+static lv_obj_t * lua_label;
+static lv_timer_t *lua_timer = NULL;
+
+void ui_lua_loop(int v) {}
+void ui_lua_stop(void) {}
+
+
+static void scr13_btn_event_cb(lv_event_t * e)
+{
+    if(e->code == LV_EVENT_CLICKED){
+        scr_mgr_pop(false);
+    }
+}
+
+void lua_timer_cb(lv_timer_t *t)
+{
+    static int idx = 1;
+    
+    lv_label_set_text_fmt(lua_label, "Lua test \n"
+                            "Phase : %d\n", idx);
+    lv_obj_center(lua_label);
+
+    ui_lua_loop(idx++);
+
+    if(idx > 123) {
+        idx = 0;
+    }
+}
+
+static void create13(lv_obj_t *parent)
+{
+    lua_label = lv_label_create(parent);
+    lv_obj_set_width(lua_label, lv_pct(95));
+    lv_obj_set_style_text_font(lua_label, FONT_BOLD_SIZE_15, LV_PART_MAIN);
+    lv_label_set_long_mode(lua_label, LV_LABEL_LONG_WRAP);
+    lv_label_set_text(lua_label, "Lua tests go here...");
+    lv_obj_center(lua_label);
+
+    lua_timer = lv_timer_create(lua_timer_cb, 2000, NULL);
+    // back 
+    scr_back_btn_create(parent, "Lua", scr8_btn_event_cb);
+}
+static void entry13(void) 
+{
+    ui_disp_full_refr();
+}
+static void exit13(void) {
+    ui_disp_full_refr();
+}
+static void destroy13(void) {
+    if(lua_timer) {
+        lv_timer_del(lua_timer);
+        lua_timer = NULL;
+    }
+    ui_lua_stop();
+}
+
+static scr_lifecycle_t screen13 = {
+    .create = create13,
+    .entry = entry13,
+    .exit  = exit13,
+    .destroy = destroy13,
+};
+#endif
 //************************************[ UI ENTRY ]******************************************
 static lv_obj_t *menu_keypad;
 static lv_timer_t *menu_timer = NULL;
@@ -4028,6 +4095,7 @@ void ui_deckpro_entry(void)
     scr_mgr_register(SCREEN10_ID,   &screen10);     // Music
     scr_mgr_register(SCREEN11_ID,   &screen11);     // Sleep
     scr_mgr_register(SCREEN12_ID,   &screen12);     // Motor
+    scr_mgr_register(SCREEN13_ID,   &screen13);     // Lua
     
     scr_mgr_switch(SCREEN0_ID, false); // set root screen
     scr_mgr_set_anim(LV_SCR_LOAD_ANIM_OVER_LEFT, LV_SCR_LOAD_ANIM_OVER_LEFT, LV_SCR_LOAD_ANIM_OVER_LEFT);
