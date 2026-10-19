@@ -5,42 +5,6 @@
 #include "peripheral.h"
 #include "ui_deckpro_port.h"
 
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-
-int lua_main(void) {
-    lua_State *L = luaL_newstate();
-    luaL_openlibs(L);
-
-    // define a Lua function
-    if (luaL_dostring(L,
-        "function add(a, b)\n"
-        "  return a + b\n"
-        "end\n"
-    ) != LUA_OK) {
-        fprintf(stderr, "Lua error: %s\n", lua_tostring(L, -1));
-        lua_close(L);
-        return 1;
-    }
-
-    // call the Lua function: add(2, 3)
-    lua_getglobal(L, "add");
-    lua_pushnumber(L, 2);
-    lua_pushnumber(L, 3);
-
-    if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
-        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
-        lua_close(L);
-        return 1;
-    }
-
-    double result = lua_tonumber(L, -1);
-    printf("result = %g\n", result);
-
-    lua_close(L);
-    return 0;
-}
 
 static SX1262 radio = new Module(BOARD_LORA_CS, BOARD_LORA_INT, BOARD_LORA_RST, BOARD_LORA_BUSY);
 static bool lora_available = false;
@@ -86,10 +50,6 @@ bool lora_init(void)
     lora_recv_success = false;
     lora_mode = LORA_MODE_SEND;
 
-  Serial.print(F("Initializing lua"));
-  lua_main();
-  Serial.print(F("lua done"));
-  
     Serial.print(F("[SX1262] Initializing ... "));
     int state = radio.begin(ui_lora_get_freq());
     if (state == RADIOLIB_ERR_NONE) {
