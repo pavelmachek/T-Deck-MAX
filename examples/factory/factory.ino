@@ -303,10 +303,12 @@ static bool bq25896_init(void)
     if(ret == 0) {
         PPM.init(Wire, BOARD_I2C_SDA, BOARD_I2C_SCL, SY6970_SLAVE_ADDRESS);
         // set battery charge voltage
-        PPM.setChargeTargetVoltage(4288);
+        //PPM.setChargeTargetVoltage(4288);
+	PPM.setChargeTargetVoltage(4000);
 
         // Set charge current
-        PPM.setChargerConstantCurr(1024);
+        //PPM.setChargerConstantCurr(1024);
+	PPM.setChargerConstantCurr(512);
 
         // Enable measure
         // PPM.enableMeasure();
