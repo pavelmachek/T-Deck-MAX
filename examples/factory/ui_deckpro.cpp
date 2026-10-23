@@ -47,6 +47,7 @@ static lv_timer_t *touch_chk_timer = NULL;
 static lv_timer_t *taskbar_update_timer = NULL;
 static lv_timer_t *low_battery_timer = NULL;
 static lv_timer_t *phone_state_timer = NULL;
+static lv_timer_t *lua_timer = NULL;
 static lv_obj_t *label_list[10] = {0};
 uint16_t taskbar_statue[TASKBAR_ID_MAX] = {0};
 
@@ -3470,7 +3471,7 @@ static void scr666_btn_event_cb(lv_event_t * e)
 }
 
 #define SX 240
-#define SY 300
+#define SY 280
 
 // FIXME: /8..?
 uint8_t screen_buf[SX*SY] = {
@@ -3523,6 +3524,19 @@ void set_img(lv_obj_t * label)
 #endif
 }
 
+static lv_obj_t * lua_label;
+
+static void lua_timer_cb(lv_timer_t *t)
+{
+    (void)t;
+
+    int r = lua_step();
+    if (lua_label && r == 1) {
+      set_img(lua_label);
+    }
+}
+
+
 static void create666(lv_obj_t *parent)
 {
     printf("666: activated\n");
@@ -3534,16 +3548,17 @@ static void create666(lv_obj_t *parent)
     Serial.print(F("lua done"));
 
     if (1) {
-        lv_obj_t * label = lv_img_create(parent);
+      lua_label = lv_img_create(parent);
 	//lv_img_set_src(label, &img_start);
-	Serial.print(F("lua step"));
-	
-	lua_step();
 	Serial.print(F("set img"));
 	
-	set_img(label);
-	lv_obj_set_width(label, lv_pct(100));
-	lv_obj_center(label);
+	set_img(lua_label);
+	lv_obj_set_width(lua_label, SX);
+	lv_obj_set_height(lua_label, SY);
+	lv_obj_align(lua_label, LV_ALIGN_TOP_LEFT, 0, 320-SY);
+	//lv_img_set_offset_y(lua_label, 320-SY);
+
+	//lv_obj_center(lua_label);
 	Serial.print(F("label done"));
 
 	// back 
@@ -4331,6 +4346,9 @@ void ui_deckpro_entry(void)
     phone_state_timer = lv_timer_create(phone_state_timer_cb, 30, NULL);
     lv_timer_ready(phone_state_timer);
 
+    lua_timer = lv_timer_create(lua_timer_cb, 30, NULL);
+    lv_timer_ready(lua_timer);
+    
     scr_mgr_init();
 
     scr_mgr_register(SCREEN0_ID,    &screen0);      // menu

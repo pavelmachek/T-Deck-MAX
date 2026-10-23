@@ -3,6 +3,9 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+#include "utilities.h"
+//#include "peripheral.h"
+
 #include "glue.h"
 
 static lua_State *L;
@@ -17,6 +20,7 @@ static int l_get_pixel(lua_State *L) {
     if (x < 0 || x >= sx || y < 0 || y >= sy)
         return luaL_error(L, "pixel coordinates out of bounds");
 
+    // fixme
     lua_pushinteger(L, screen[y * sx + x]);
     return 1;
 }
@@ -32,16 +36,41 @@ static int l_set_pixel(lua_State *L) {
         return luaL_error(L, "pixel value must be between 0 and 255");
 
     int i = y * sx + x;
-    if (value)
+    if (!value)
       screen[i / 8] |= 0x80U >> (i % 8);
     else
       screen[i / 8] &= ~(0x80U >> (i % 8));
     return 0;
 }
 
+static int l_cprint(lua_State *L) {
+    const char *text = luaL_checkstring(L, 1);
+    if (text)
+      printf("%s\n", text);
+    else
+      printf("cprint: no argument?\n");
+    return 0;  // no Lua return values
+}
+
+// Also available:
+// print() -- works even outside cprint
+// print(os.time())
+// print(os.date("%Y-%m-%d %H:%M:%S"))
+// print(math.random())
+
+
 static char lua_code[] =
   "function add(a, b)\n"
   "  return a + b\n"
+  "end\n\n"
+
+  "redraw = 0\n"
+  "function step(i)\n"
+  "  if redraw > 0 then\n"
+  "    redraw = 0\n"
+  "    return 1\n"
+  "  end\n"
+  "  return 0\n"
   "end\n\n"
 
     "local w, h = screen_width, screen_height\n"
@@ -92,6 +121,9 @@ int lua_init(uint8_t *_screen, int _sx, int _sy) {
 
     lua_pushcfunction(L, l_set_pixel);
     lua_setglobal(L, "set_pixel");
+    
+lua_pushcfunction(L, l_cprint);
+lua_setglobal(L, "cprint");
 
     lua_pushinteger(L, sx);
     lua_setglobal(L, "screen_width");
@@ -99,10 +131,11 @@ int lua_init(uint8_t *_screen, int _sx, int _sy) {
     lua_pushinteger(L, sy);
     lua_setglobal(L, "screen_height");
 
+    
+
     // define a Lua function
     if (luaL_dostring(L, lua_code) != LUA_OK) {
         fprintf(stderr, "Lua error: %s\n", lua_tostring(L, -1));
-        lua_close(L);
         return -1;
     }
 
@@ -113,7 +146,6 @@ int lua_init(uint8_t *_screen, int _sx, int _sy) {
 
     if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
         fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
-        lua_close(L);
         return -1;
     }
 
@@ -122,10 +154,53 @@ int lua_init(uint8_t *_screen, int _sx, int _sy) {
     return 0;
 }
 
+static char input[2048];
+static int input_pos;
+
+int lua_exec_input(void) {
+  printf("\n# exec, %d chars\n", input_pos);
+   if (luaL_dostring(L, input) != LUA_OK) {
+        fprintf(stderr, "Lua error: %s\n", lua_tostring(L, -1));
+	return -1;
+   }
+   printf("# done\n");
+   return 0;
+}
+
+// returns 1 if screen should be redrawn
 int lua_step(void) {
-  return 0;
+  // fixme: lua_step is not called often enough, so this drops characters
+  while (Serial.available()) {
+	    int c = Serial.read();
+	    if (c == 2) { // ctrl-b
+	      input[input_pos++] = 0;
+	      lua_exec_input();
+	      input_pos = 0;
+	      continue;
+	    }
+
+	    printf("%c", c);
+	    Serial.write(c);
+	    input[input_pos++] = c;
+        }
+
+	  if (!L)
+	    return -1;
+
+      lua_getglobal(L, "step");
+    lua_pushnumber(L, 666);
+
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
+        return -1;
+    }
+
+    double result = lua_tonumber(L, -1);
+
+  return result;
 }
 
 void lua_done(void) {
     lua_close(L);
 }
+
