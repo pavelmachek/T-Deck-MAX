@@ -22,6 +22,7 @@ uint8_t buffer[256];
 bool gps_init(void)
 {   
     bool result = false;
+    return false;
     // L76K GPS USE 9600 BAUDRATE
     // result = setupGPS();
     if(!result) {
