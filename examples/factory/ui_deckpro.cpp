@@ -3471,27 +3471,10 @@ static void scr666_btn_event_cb(lv_event_t * e)
 }
 
 #define SX 240
-#define SY 280
+#define SY 290
 
 // FIXME: /8..?
-uint8_t screen_buf[SX*SY] = {
-  0xff, 0xff,
-  0xff, 0xfe,
-  0xff, 0xfc,
-  0xff, 0xf8,
-  0xff, 0xf0,
-  0xff, 0xe0,
-  0xff, 0xc0,
-  0xff, 0x80,
-  0xff,
-  0, 0xfe,
-  0, 0xfc,
-  0, 0xf8,
-  0, 0xf0,
-  0, 0xe0,
-  0, 0xc0,
-  0, 0x80, 0, };
-
+static uint8_t screen_buf[SX*SY];
 #if LV_COLOR_DEPTH != 1
 #error expecting 1bpp
 #endif
@@ -3511,11 +3494,6 @@ void set_img(lv_obj_t * label)
     lv_img_set_src(label, &raw_img);
 
     //lv_img_set_zoom(label, 512);
-#if 0
-    lv_img_set_offset_x(label, 184);
-    lv_img_set_offset_y(label, 104);
-#endif
-    
 #ifdef USE_AUDIO
     static uint8_t audio_buf[1024];
     int32_t chunk = 1024;
@@ -3534,18 +3512,47 @@ static void lua_timer_cb(lv_timer_t *t)
     if (lua_label && r == 1) {
       set_img(lua_label);
     }
+
+    char key = '\0';
+    int event_state = KEYPAD_RELEASE;
+
+    while (keypad_get_event(&key, &event_state)) {
+	lua_key(event_state != KEYPAD_RELEASE, key);
+    }
 }
 
+static void lua_touch_event_handler(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    
+    // Retrieve the label we passed in as user_data
+    lv_obj_t * label = (lv_obj_t *)lv_event_get_user_data(e);
+    
+    // Get the coordinates of the touch event
+    lv_point_t coords;
+    lv_indev_get_point(lv_indev_get_act(), &coords);
+
+    if (code == LV_EVENT_PRESSED) {
+	lua_touch(1, coords.x, coords.y);
+    } 
+    if (code == LV_EVENT_PRESSING) {
+	lua_touch(2, coords.x, coords.y);
+    } 
+    if (code == LV_EVENT_RELEASED) {
+	lua_touch(0, coords.x, coords.y);
+    }
+}
+
+static void setup_screen_touch(lv_obj_t * label) {
+      lv_obj_add_flag(label, LV_OBJ_FLAG_CLICKABLE);
+      lv_obj_add_event_cb(label, lua_touch_event_handler, LV_EVENT_ALL, label);
+}
 
 static void create666(lv_obj_t *parent)
 {
-    printf("666: activated\n");
-    printf("LV_COLOR_DEPTH=%d\n", LV_COLOR_DEPTH);
-    printf("sizeof(lv_color_t)=%zu\n", sizeof(lv_color_t));
+  //    printf("LV_COLOR_DEPTH=%d\n", LV_COLOR_DEPTH);
+  //    printf("sizeof(lv_color_t)=%zu\n", sizeof(lv_color_t));
 
-    Serial.print(F("Initializing lua"));
     lua_init(screen_buf, SX, SY);
-    Serial.print(F("lua done"));
 
     if (1) {
       lua_label = lv_img_create(parent);
@@ -3557,6 +3564,8 @@ static void create666(lv_obj_t *parent)
 	lv_obj_set_height(lua_label, SY);
 	lv_obj_align(lua_label, LV_ALIGN_TOP_LEFT, 0, 320-SY);
 	//lv_img_set_offset_y(lua_label, 320-SY);
+
+	setup_screen_touch(lua_label);
 
 	//lv_obj_center(lua_label);
 	Serial.print(F("label done"));
@@ -3573,7 +3582,7 @@ static void create666(lv_obj_t *parent)
     lv_obj_center(label);
 
     // back 
-    scr_back_btn_create(parent, "Shoutdown", scr8_btn_event_cb);
+    scr_back_btn_create(parent, "Shutdown", scr8_btn_event_cb);
 }
 static void entry666(void) 
 {
