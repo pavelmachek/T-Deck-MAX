@@ -815,7 +815,8 @@ static void phone_handle_command(const phone_cmd_t *cmd)
         phone_send_command_line("AT+CHUP");
         break;
     case PHONE_CMD_STATUS:
-        phone_send_command_line("AT+COPS?");
+        phone_send_command_line("AT+CPSI?");
+        phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Get status");
         break;
     case PHONE_CMD_TEST_DIGITS:
         phone_enable_call_audio();
@@ -860,6 +861,11 @@ static void phone_handle_serial_line(const char *line)
 
     if (strncmp(line, "+CLCC:", 6) == 0) {
         phone_handle_clcc_line(line);
+        return;
+    }
+
+    if (strncmp(line, "+CPSI:", 6) == 0) {
+        phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, line+7);
         return;
     }
 
