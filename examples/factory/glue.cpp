@@ -214,6 +214,9 @@ int lua_exec_input(void) {
 
 // returns 1 if screen should be redrawn
 int lua_step(void) {
+    if (!L)
+      return -1;
+  
     // fixme: lua_step is not called often enough, so this drops characters
     while (Serial.available()) {
         int c = Serial.read();
@@ -228,9 +231,6 @@ int lua_step(void) {
 	Serial.write(c);
 	input[input_pos++] = c;
     }
-
-    if (!L)
-      return -1;
 
     lua_getglobal(L, "step");
     lua_pushnumber(L, 666);
