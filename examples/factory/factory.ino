@@ -45,6 +45,7 @@ int disp_refr_mode = DISP_REFR_MODE_PART;
 static lv_disp_t *factory_disp = NULL;
 static uint32_t disp_partial_refr_until_ms = 0;
 const char HelloWorld[] = BOARD_NAME;
+const int at_debug = 0;
 
 bool peri_init_st[E_PERI_NUM_MAX] = {0};
 
@@ -913,6 +914,9 @@ static void phone_handle_serial_line(const char *line)
         phone_clcc_lines_seen = false;
         return;
     }
+
+    if (at_debug)
+        phone_snapshot_add_history("Debug", "?", line);
 }
 
 static void a7682_task(void *param)
