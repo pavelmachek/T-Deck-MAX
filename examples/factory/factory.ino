@@ -649,14 +649,9 @@ printf("modem: status?\n");
 
 printf("modem: idle, ok, should queue command?\n");
 
-    phone_test_audio_active = true;
-    phone_test_audio_ok_count = 0;
     phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Status");
     if (!phone_queue_command(PHONE_CMD_STATUS, NULL, false)) {
         phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Idle");
-        phone_test_audio_active = false;
-        phone_test_audio_ok_count = 0;
-        return;
     }
     return;
 }
