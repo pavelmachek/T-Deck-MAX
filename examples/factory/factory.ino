@@ -971,6 +971,7 @@ static void a7682_task(void *param)
         }
 
         ui_phone_state_t state = phone_snapshot_state();
+	// If call is active, periodically do +CLCC
         if ((state == UI_PHONE_STATE_OUTGOING ||
              state == UI_PHONE_STATE_INCOMING ||
              state == UI_PHONE_STATE_ACTIVE) &&
