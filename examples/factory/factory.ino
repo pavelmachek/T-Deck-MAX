@@ -1121,10 +1121,20 @@ static void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
     }
 }
 
+RTC_DATA_ATTR unsigned long key = 0x12345678;
+
 void setup()
 {
     setCpuFrequencyMhz(240);
     Serial.begin(115200);
+    Serial.print("setup: At 240 MHz, serial ready\n");
+    if (key == 0x12345678)
+        Serial.print("key is 12\n");
+    else if (key == 0xdeadbeef)
+        Serial.print("key is de\n");
+    else
+	Serial.print("key is something else\n");
+    key = 0xdeadbeef;
 #if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT
     // Keep the UI responsive after the USB serial monitor is closed.
     Serial.setTxTimeoutMs(0);
