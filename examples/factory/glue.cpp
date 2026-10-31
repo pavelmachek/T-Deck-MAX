@@ -11,6 +11,15 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/*
+   This version of javascript does not seem to understand:
+
+   let
+   () = { ... }
+   
+*/
+   
+
 extern const char app_js_start[] asm("_binary_data_app_js_start");
 extern const char app_js_end[]   asm("_binary_data_app_js_end");
 
@@ -92,19 +101,19 @@ static void js_register_globals(void)
     duk_put_global_string(ctx, "print");
 
     duk_push_c_function(ctx, js_cprint, 1);
-    duk_put_global_string(ctx, "cprint");
+    duk_put_global_string(ctx, "__cprint");
 
     duk_push_c_function(ctx, js_get_pixel, 2);
-    duk_put_global_string(ctx, "get_pixel");
+    duk_put_global_string(ctx, "__get_pixel");
 
     duk_push_c_function(ctx, js_set_pixel, 3);
-    duk_put_global_string(ctx, "set_pixel");
+    duk_put_global_string(ctx, "__set_pixel");
 
     duk_push_int(ctx, sx);
-    duk_put_global_string(ctx, "screen_width");
+    duk_put_global_string(ctx, "__screen_width");
 
     duk_push_int(ctx, sy);
-    duk_put_global_string(ctx, "screen_height");
+    duk_put_global_string(ctx, "__screen_height");
 }
 
 static int js_eval(const char *code)
@@ -219,7 +228,7 @@ int js_step(void)
     int args[] = { 666 };
     int result = 0;
 
-    if (js_call("step", 1, args, &result) != 0)
+    if (js_call("__step", 1, args, &result) != 0)
         return -1;
 
     return result;
@@ -230,7 +239,7 @@ int js_touch(int down, int x, int y)
     int args[] = { down, x, y };
     int result = 0;
 
-    if (js_call("touch", 3, args, &result) != 0)
+    if (js_call("__touch", 3, args, &result) != 0)
         return -1;
 
     return result;
@@ -241,7 +250,7 @@ int js_key(int press, int v)
     int args[] = { press, v };
     int result = 0;
 
-    if (js_call("key", 2, args, &result) != 0)
+    if (js_call("__key", 2, args, &result) != 0)
         return -1;
 
     return result;
