@@ -550,6 +550,7 @@ if (1) {
   function drawClock() {
     var now = new Date();
     var slot = now.getMinutes() % (cols*rows);
+    // 29->30 transition is wrong, it goes from all white to all black
     var ink = (now.getMinutes() / (cols*rows)) % 2;
     var w = g.getWidth();
     var h = g.getHeight();
