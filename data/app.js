@@ -120,8 +120,8 @@ function __key(press, v) {
 var __W = __screen_width;
 var __H = __screen_height;
 var __BPP = 1;
-var __color = 1;
-var __bgColor = 0;
+var __color;
+var __bgColor;
 
 function __draw_hline(x1, x2, y, color) {
   var t;
@@ -310,7 +310,7 @@ var g = {
     return g;
   },
 
-  drawCircle: function (x, y, rad) {
+  drawCircle: function (x, y, rad) { // FIXME: broken
     var points = [];
     var steps = Math.max(12, Math.ceil(2 * Math.PI * Math.abs(rad) * 2));
     var i;
@@ -336,6 +336,7 @@ var g = {
     return g;
   },
 
+  // untested
   drawPoly: function (poly, closed) {
     __polygon(poly, !!closed, false, __color);
     return g;
@@ -368,6 +369,7 @@ var g = {
     return g;
   },
 
+  // untested
   fillPoly: function (poly) {
     __polygon(poly, true, true, __color);
     return g;
@@ -388,14 +390,14 @@ var g = {
   getHeight: function () { return __H; },
 
   getPixel: function (x, y) {
-    return __get_pixels(x, y);
+    return __get_pixel(x, y);
   },
 
   getWidth: function () { return __W; },
 
   reset: function () {
-    __color = 7;
-    __bgColor = 0;
+    __color = 0;
+    __bgColor = 1;
     return g;
   },
 
@@ -414,5 +416,7 @@ var g = {
     return g;
   }
 };
+
+g.reset();
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
