@@ -1,332 +1,338 @@
 #include <stdint.h>
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
-
-// https://registry.platformio.org/libraries/joeqread/JavaScript/examples/hello_world/hello_world.ino
+#include <stdio.h>
+#include <string.h>
 
 #include <duktape.h>
 #include <Arduino.h>
 
-static duk_context *ctx;
-
-static duk_ret_t js_native_print(duk_context *ctx) {
-  duk_push_string(ctx, " ");
-  duk_insert(ctx, 0);
-  duk_join(ctx, duk_get_top(ctx) - 1);
-  Serial.printf("%s", duk_to_string(ctx, -1));
-
-  return 0;
-}
-
-void js_setup ()
-{
-  ctx = duk_create_heap_default();
-
-  duk_push_c_function(ctx, js_native_print, DUK_VARARGS);
-  duk_put_global_string(ctx, "print");
-}
-
-void js_eval (char *code)
-{
-  Serial.printf("\n>>> Eval Code: %s\n", code);
-  duk_push_string(ctx, code);
-  duk_int_t rc = duk_peval(ctx);
-
-  if (rc != 0) {
-    duk_safe_to_stacktrace(ctx, -1);
-  } else {
-    duk_safe_to_string(ctx, -1);
-  }
-
-  String res = duk_get_string(ctx, -1);
-
-  Serial.printf("\n>>> Reslt: %s\n", res ? res : "null");
-
-  duk_pop(ctx);
-//  duk_destroy_heap(ctx);
-}
-
 #include "utilities.h"
-//#include "peripheral.h"
-
 #include "glue.h"
 
-static lua_State *L;
+static duk_context *ctx;
 static uint8_t *screen;
 static int sx, sy;
 
-static int l_get_pixel(lua_State *L) {
-    int x = (int)luaL_checkinteger(L, 1);
-    int y = (int)luaL_checkinteger(L, 2);
+static char input[2048];
+static size_t input_pos;
 
-    // FIXME
+/* Screen access */
+
+static duk_ret_t js_get_pixel(duk_context *ctx)
+{
+    int x = duk_require_int(ctx, 0);
+    int y = duk_require_int(ctx, 1);
+
     if (x < 0 || x >= sx || y < 0 || y >= sy)
-        return luaL_error(L, "pixel coordinates out of bounds");
+        return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+                         "pixel coordinates out of bounds");
 
-    // fixme
-    lua_pushinteger(L, screen[y * sx + x]);
+    int i = y * sx + x;
+    duk_push_int(ctx, (screen[i / 8] & (0x80U >> (i % 8))) != 0);
     return 1;
 }
 
-static int l_set_pixel(lua_State *L) {
-    int x = (int)luaL_checkinteger(L, 1);
-    int y = (int)luaL_checkinteger(L, 2);
-    int value = (int)luaL_checkinteger(L, 3);
+static duk_ret_t js_set_pixel(duk_context *ctx)
+{
+    int x = duk_require_int(ctx, 0);
+    int y = duk_require_int(ctx, 1);
+    int value = duk_require_int(ctx, 2);
 
     if (x < 0 || x >= sx || y < 0 || y >= sy)
-        return luaL_error(L, "pixel coordinates out of bounds");
+        return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+                         "pixel coordinates out of bounds");
     if (value < 0 || value > 255)
-        return luaL_error(L, "pixel value must be between 0 and 255");
+        return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+                         "pixel value must be between 0 and 255");
 
     int i = y * sx + x;
-    if (!value)
-      screen[i / 8] |= 0x80U >> (i % 8);
+    uint8_t mask = (uint8_t)(0x80U >> (i % 8));
+
+    /* Preserve the original implementation's pixel polarity. */
+    if (value == 0)
+        screen[i / 8] |= mask;
     else
-      screen[i / 8] &= ~(0x80U >> (i % 8));
+        screen[i / 8] &= (uint8_t)~mask;
+
     return 0;
 }
 
-static int l_cprint(lua_State *L) {
-    const char *text = luaL_checkstring(L, 1);
-    if (text)
-      printf("%s\n", text);
-    else
-      printf("cprint: no argument?\n");
-    return 0;  // no Lua return values
+static duk_ret_t js_print(duk_context *ctx)
+{
+    duk_idx_t count = duk_get_top(ctx);
+
+    for (duk_idx_t i = 0; i < count; ++i) {
+        if (i != 0)
+            Serial.print(' ');
+
+        Serial.print(duk_safe_to_string(ctx, i));
+    }
+    Serial.println();
+
+    return 0;
 }
 
-// Also available:
-// print() -- works even outside cprint
-// print(os.time())
-// print(os.date("%Y-%m-%d %H:%M:%S"))
-// print(math.random())
+static duk_ret_t js_cprint(duk_context *ctx)
+{
+    const char *text = duk_safe_to_string(ctx, 0);
+    Serial.println(text);
+    return 0;
+}
 
-static char lua_code[] =
-  "function add(a, b)\n"
-  "  return a + b\n"
-  "end\n\n"
+static void js_register_globals(void)
+{
+    duk_push_c_function(ctx, js_print, DUK_VARARGS);
+    duk_put_global_string(ctx, "print");
 
-    "local ink_color = 0\n"
-    "\n"
-    "function ink(x, y)\n"
-    "  set_pixel(x, y, ink_color)\n"
-    "end\n"
-    "\n"
-    "function bink(x, y)\n"
-    "  set_pixel(x, y, ink_color)\n"
-    "  set_pixel(x+1, y, ink_color)\n"
-    "  set_pixel(x, y+1, ink_color)\n"
-    "  set_pixel(x+1, y+1, ink_color)\n"
-    "end\n"
-    "\n"
-    "function cls()\n"
-    "  local color = ink_color\n"
-    "  local w, h = screen_width, screen_height\n"
-    "  for y = 0, h - 1 do\n"
-    "      for x = 0, w - 1 do\n"
-    "        set_pixel(x, y, color)\n"
-    "      end\n"
-    "  end\n"
-    "  redraw = 1\n"
-    "  ink_color = 1 - color\n"
-    "  now()\n"
-    "end\n"
-    "\n"
-  "redraw = 0\n"
-  "function step(i)\n"
-  "  if redraw > 0 then\n"
-  "    redraw = 0\n"
-  "    return 1\n"
-  "  end\n"
-  "  return 0\n"
-  "end\n\n"
-    "function now()\n"
-    "  redraw = 1\n"
-    "end\n"
-    "\n"
-    "function glyph()\n"
-    " local w, h = screen_width, screen_height\n"
-    " -- Draw an X from corner to corner\n"
-    " local steps = math.max(w, h)\n"
-    " if steps > 1 then\n"
-    "  for i = 0, steps - 1 do\n"
-    "    local x = math.floor(i * (w - 1) / (steps - 1))\n"
-    "    local y = math.floor(i * (h - 1) / (steps - 1))\n"
-    "    ink(x, y)\n"
-    "    ink(x, h - 1 - y)\n"
-    "  end\n"
-    " end\n"
-    "\n"
-    " -- Draw an outlined circle in the center\n"
-    " local cx, cy = (w - 1) / 2, (h - 1) / 2\n"
-    " local radius = math.floor(math.min(w, h) / 4)\n"
-    " local thickness = 1.5\n"
-    " for y = 0, h - 1 do\n"
-    "  for x = 0, w - 1 do\n"
-    "    local dx, dy = x - cx, y - cy\n"
-    "    local distance = math.sqrt(dx * dx + dy * dy)\n"
-    "    if math.abs(distance - radius) <= thickness then\n"
-    "      ink(x, y)\n"
-    "    end\n"
-    "  end\n"
-    " end\n"
-    " now()\n"
-    "end\n"
-    "\n"
-    "function grey()\n"
-    "  local w, h = screen_width, screen_height\n"
-    "  for y = 0, h - 1 do\n"
-    "      for x = 0, w - 1 do\n"
-    "        if ((x + y) % 2) ~= 0 then\n"
-    " 	  ink(x, y)\n"
-    "	 end\n"
-    "      end\n"
-    "  end\n"
-    "  now()\n"
-    "end\n"
-    "\n"
-    "function touch(d, x, y)\n"
-    "  print(\"Touch:\", d, x, y)\n"
-    "  bink(x, y)\n"
-    "  return 0\n"
-    "end\n"
-    "\n"
-    "function key(press, v)\n"
-    "  print(\"Key:\", press, v)\n"
-    "  return 0\n"
-    "end\n"
-    "\n"
-  "\n";
+    duk_push_c_function(ctx, js_cprint, 1);
+    duk_put_global_string(ctx, "cprint");
 
-int lua_init(uint8_t *_screen, int _sx, int _sy) {
-    js_setup();
-    js_eval("print('Hello, world!');");
+    duk_push_c_function(ctx, js_get_pixel, 2);
+    duk_put_global_string(ctx, "get_pixel");
 
-    L = luaL_newstate();
-    luaL_openlibs(L);
+    duk_push_c_function(ctx, js_set_pixel, 3);
+    duk_put_global_string(ctx, "set_pixel");
+
+    duk_push_int(ctx, sx);
+    duk_put_global_string(ctx, "screen_width");
+
+    duk_push_int(ctx, sy);
+    duk_put_global_string(ctx, "screen_height");
+}
+
+static int js_eval(const char *code)
+{
+    if (duk_peval_string(ctx, code) != 0) {
+        Serial.print("JavaScript error: ");
+        Serial.println(duk_safe_to_string(ctx, -1));
+        duk_pop(ctx);
+        return -1;
+    }
+
+    duk_pop(ctx);
+    return 0;
+}
+
+static const char js_code[] =
+    "function add(a, b) { return a + b; }\n"
+    "\n"
+    "var ink_color = 0;\n"
+    "\n"
+    "function ink(x, y) {\n"
+    "  set_pixel(x, y, ink_color);\n"
+    "}\n"
+    "\n"
+    "function bink(x, y) {\n"
+    "  set_pixel(x, y, ink_color);\n"
+    "  set_pixel(x + 1, y, ink_color);\n"
+    "  set_pixel(x, y + 1, ink_color);\n"
+    "  set_pixel(x + 1, y + 1, ink_color);\n"
+    "}\n"
+    "\n"
+    "function cls() {\n"
+    "  var color = ink_color;\n"
+    "  for (var y = 0; y < screen_height; y++) {\n"
+    "    for (var x = 0; x < screen_width; x++) {\n"
+    "      set_pixel(x, y, color);\n"
+    "    }\n"
+    "  }\n"
+    "  redraw = 1;\n"
+    "  ink_color = 1 - color;\n"
+    "  now();\n"
+    "}\n"
+    "\n"
+    "var redraw = 0;\n"
+    "function step(i) {\n"
+    "  if (redraw > 0) {\n"
+    "    redraw = 0;\n"
+    "    return 1;\n"
+    "  }\n"
+    "  return 0;\n"
+    "}\n"
+    "\n"
+    "function now() { redraw = 1; }\n"
+    "\n"
+    "function glyph() {\n"
+    "  var w = screen_width, h = screen_height;\n"
+    "  var steps = Math.max(w, h);\n"
+    "  if (steps > 1) {\n"
+    "    for (var i = 0; i < steps; i++) {\n"
+    "      var x = Math.floor(i * (w - 1) / (steps - 1));\n"
+    "      var y = Math.floor(i * (h - 1) / (steps - 1));\n"
+    "      ink(x, y);\n"
+    "      ink(x, h - 1 - y);\n"
+    "    }\n"
+    "  }\n"
+    "\n"
+    "  var cx = (w - 1) / 2, cy = (h - 1) / 2;\n"
+    "  var radius = Math.floor(Math.min(w, h) / 4);\n"
+    "  var thickness = 1.5;\n"
+    "  for (var y = 0; y < h; y++) {\n"
+    "    for (var x = 0; x < w; x++) {\n"
+    "      var dx = x - cx, dy = y - cy;\n"
+    "      var distance = Math.sqrt(dx * dx + dy * dy);\n"
+    "      if (Math.abs(distance - radius) <= thickness) ink(x, y);\n"
+    "    }\n"
+    "  }\n"
+    "  now();\n"
+    "}\n"
+    "\n"
+    "function grey() {\n"
+    "  for (var y = 0; y < screen_height; y++) {\n"
+    "    for (var x = 0; x < screen_width; x++) {\n"
+    "      if (((x + y) % 2) !== 0) ink(x, y);\n"
+    "    }\n"
+    "  }\n"
+    "  now();\n"
+    "}\n"
+    "\n"
+    "function touch(d, x, y) {\n"
+    "  print('Touch:', d, x, y);\n"
+    "  bink(x, y);\n"
+    "  return 0;\n"
+    "}\n"
+    "\n"
+    "function key(press, v) {\n"
+    "  print('Key:', press, v);\n"
+    "  return 0;\n"
+    "}\n";
+
+int lua_init(uint8_t *_screen, int _sx, int _sy)
+{
+    if (!_screen || _sx <= 0 || _sy <= 0)
+        return -1;
 
     screen = _screen;
     sx = _sx;
     sy = _sy;
 
-    lua_pushcfunction(L, l_get_pixel);
-    lua_setglobal(L, "get_pixel");
-
-    lua_pushcfunction(L, l_set_pixel);
-    lua_setglobal(L, "set_pixel");
-    
-    lua_pushcfunction(L, l_cprint);
-    lua_setglobal(L, "cprint");
-
-    lua_pushinteger(L, sx);
-    lua_setglobal(L, "screen_width");
-
-    lua_pushinteger(L, sy);
-    lua_setglobal(L, "screen_height");
-
-    // define a Lua function
-    if (luaL_dostring(L, lua_code) != LUA_OK) {
-        fprintf(stderr, "Lua error: %s\n", lua_tostring(L, -1));
+    ctx = duk_create_heap_default();
+    if (!ctx)
         return -1;
-    }
 
-    // call the Lua function: add(2, 3)
-    lua_getglobal(L, "add");
-    lua_pushnumber(L, 2);
-    lua_pushnumber(L, 3);
+    js_register_globals();
 
-    if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
-        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
+    if (js_eval(js_code) != 0)
         return -1;
-    }
 
-    double result = lua_tonumber(L, -1);
-    printf("result = %g\n", result);
+    js_eval("print('Hello, world!');");
+    js_eval("print('result =', add(2, 3));");
+
     return 0;
 }
 
-static char input[2048];
-static int input_pos;
+static int js_call(const char *name, int nargs, int *args, int *result)
+{
+    if (!ctx)
+        return -1;
 
-int lua_exec_input(void) {
-    printf("\n# exec, %d chars\n", input_pos);
-    if (luaL_dostring(L, input) != LUA_OK) {
-        fprintf(stderr, "Lua error: %s\n", lua_tostring(L, -1));
-	return -1;
+    duk_get_global_string(ctx, name);
+    if (!duk_is_function(ctx, -1)) {
+        duk_pop(ctx);
+        Serial.print("JavaScript function not found: ");
+        Serial.println(name);
+        return -1;
     }
-    printf("# done\n");
+
+    for (int i = 0; i < nargs; ++i)
+        duk_push_int(ctx, args[i]);
+
+    if (duk_pcall(ctx, nargs) != 0) {
+        Serial.print("JavaScript error: ");
+        Serial.println(duk_safe_to_string(ctx, -1));
+        duk_pop(ctx);
+        return -1;
+    }
+
+    *result = duk_to_int(ctx, -1);
+    duk_pop(ctx);
     return 0;
 }
 
-// returns 1 if screen should be redrawn
-int lua_step(void) {
-    if (!L)
-      return -1;
-  
-    // fixme: lua_step is not called often enough, so this drops characters
+static int js_exec_input(void)
+{
+    input[input_pos] = '\0';
+    Serial.printf("\n# exec, %u chars\n", (unsigned)input_pos);
+
+    int rc = js_eval(input);
+    if (rc == 0)
+        Serial.println("# done");
+
+    return rc;
+}
+
+int lua_exec_input(void)
+{
+    return js_exec_input();
+}
+
+/* Returns 1 if the screen should be redrawn. */
+int lua_step(void)
+{
+    if (!ctx)
+        return -1;
+
     while (Serial.available()) {
         int c = Serial.read();
-	if (c == 2) { // ctrl-b
-	  input[input_pos++] = 0;
-	  lua_exec_input();
-	  input_pos = 0;
-	  continue;
-	}
 
-	printf("%c", c);
-	Serial.write(c);
-	input[input_pos++] = c;
+        if (c == 2) { /* Ctrl-B executes the accumulated input. */
+            if (input_pos < sizeof(input))
+                js_exec_input();
+            else
+                Serial.println("Input buffer full");
+
+            input_pos = 0;
+            continue;
+        }
+
+        Serial.write((char)c);
+
+        if (input_pos < sizeof(input) - 1) {
+            input[input_pos++] = (char)c;
+        } else {
+            Serial.println("\nInput buffer full; input discarded");
+            input_pos = 0;
+        }
     }
 
-    lua_getglobal(L, "step");
-    lua_pushnumber(L, 666);
+    int args[] = { 666 };
+    int result = 0;
 
-    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
-        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
+    if (js_call("step", 1, args, &result) != 0)
         return -1;
-    }
 
-    double result = lua_tonumber(L, -1);
     return result;
 }
 
-extern int lua_touch(int down, int x, int y) {
-    if (!L)
-      return -1;
-  
-    lua_getglobal(L, "touch");
-    lua_pushnumber(L, down);
-    lua_pushnumber(L, x);
-    lua_pushnumber(L, y);
+int lua_touch(int down, int x, int y)
+{
+    int args[] = { down, x, y };
+    int result = 0;
 
-    if (lua_pcall(L, 3, 1, 0) != LUA_OK) {
-        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
+    if (js_call("touch", 3, args, &result) != 0)
         return -1;
-    }
 
-    double result = lua_tonumber(L, -1);
     return result;
-}  
-
-extern int lua_key(int press, int v) {
-    if (!L)
-      return -1;
-
-    lua_getglobal(L, "key");
-    lua_pushnumber(L, press);
-    lua_pushnumber(L, v);
-
-    if (lua_pcall(L, 2, 1, 0) != LUA_OK) {
-        fprintf(stderr, "Call error: %s\n", lua_tostring(L, -1));
-        return -1;
-    }
-
-    double result = lua_tonumber(L, -1);
-    return result;
-}  
-
-void lua_done(void) {
-    lua_close(L);
 }
 
+int lua_key(int press, int v)
+{
+    int args[] = { press, v };
+    int result = 0;
+
+    if (js_call("key", 2, args, &result) != 0)
+        return -1;
+
+    return result;
+}
+
+void lua_done(void)
+{
+    if (ctx) {
+        duk_destroy_heap(ctx);
+        ctx = NULL;
+    }
+
+    screen = NULL;
+    sx = sy = 0;
+    input_pos = 0;
+}
