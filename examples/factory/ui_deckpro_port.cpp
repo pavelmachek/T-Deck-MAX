@@ -742,7 +742,7 @@ void ui_motor_stop(void)
 
 extern void display_sleep(void);
 
-void ui_system_sleep(void)
+void ui_system_sleep_deep(void)
 {
     // extern TouchDrvCSTXXX touch;
     extern ExtensionIOXL9555 xl9555_io;
@@ -870,4 +870,13 @@ void ui_system_sleep(void)
     // esp_sleep_enable_ext0_wakeup((gpio_num_t)ENCODER_KEY, 0);                            
     esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);   // Hibernate using user keys
     esp_deep_sleep_start();
+    //esp_light_sleep_start();
+}
+
+void ui_system_sleep(void)
+{
+    display_sleep();
+    Serial.print("Entering light sleep");
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);     esp_light_sleep_start();
+    Serial.print("Exited light sleep");
 }
