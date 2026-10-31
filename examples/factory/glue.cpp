@@ -3,6 +3,50 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+// https://registry.platformio.org/libraries/joeqread/JavaScript/examples/hello_world/hello_world.ino
+
+#include <duktape.h>
+#include <Arduino.h>
+
+static duk_context *ctx;
+
+static duk_ret_t js_native_print(duk_context *ctx) {
+  duk_push_string(ctx, " ");
+  duk_insert(ctx, 0);
+  duk_join(ctx, duk_get_top(ctx) - 1);
+  Serial.printf("%s", duk_to_string(ctx, -1));
+
+  return 0;
+}
+
+void js_setup ()
+{
+  ctx = duk_create_heap_default();
+
+  duk_push_c_function(ctx, js_native_print, DUK_VARARGS);
+  duk_put_global_string(ctx, "print");
+}
+
+void js_eval (char *code)
+{
+  Serial.printf("\n>>> Eval Code: %s\n", code);
+  duk_push_string(ctx, code);
+  duk_int_t rc = duk_peval(ctx);
+
+  if (rc != 0) {
+    duk_safe_to_stacktrace(ctx, -1);
+  } else {
+    duk_safe_to_string(ctx, -1);
+  }
+
+  String res = duk_get_string(ctx, -1);
+
+  Serial.printf("\n>>> Reslt: %s\n", res ? res : "null");
+
+  duk_pop(ctx);
+//  duk_destroy_heap(ctx);
+}
+
 #include "utilities.h"
 //#include "peripheral.h"
 
@@ -156,6 +200,9 @@ static char lua_code[] =
   "\n";
 
 int lua_init(uint8_t *_screen, int _sx, int _sy) {
+    js_setup();
+    js_eval("print('Hello, world!');");
+
     L = luaL_newstate();
     luaL_openlibs(L);
 
