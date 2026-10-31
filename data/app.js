@@ -336,7 +336,6 @@ var g = {
     return g;
   },
 
-  // untested
   drawPoly: function (poly, closed) {
     __polygon(poly, !!closed, false, __color);
     return g;
@@ -369,7 +368,6 @@ var g = {
     return g;
   },
 
-  // untested
   fillPoly: function (poly) {
     __polygon(poly, true, true, __color);
     return g;
