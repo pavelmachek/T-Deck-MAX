@@ -21,3 +21,5 @@ r = [ 120, 0, 200, 120, 10, 70, 20, 30 ]; g.fillPoly(r, 1); now();
 g.setFont("", 5); g.drawString("hello world", 10, 10); now();
 
 g.setFont("", 3); g.drawString("hello world", 10, 70); now();
+
+now(); print(new Date()); drawClock();

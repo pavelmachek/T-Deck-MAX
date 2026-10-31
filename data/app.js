@@ -1,4 +1,4 @@
-var ink_color = 0;
+var __ink_color = 0;
 
 function __draw_hline(x1, x2, y, color) {
   var temp;
@@ -35,38 +35,44 @@ function __fill_rect(x1, y1, x2, y2, color) {
 
 
 function ink(x, y) {
-  __set_pixel(x, y, ink_color);
+  __set_pixel(x, y, __ink_color);
 }
 
 function bink(x, y) {
-  __set_pixel(x, y, ink_color);
-  __set_pixel(x + 1, y, ink_color);
-  __set_pixel(x, y + 1, ink_color);
-  __set_pixel(x + 1, y + 1, ink_color);
+  __set_pixel(x, y, __ink_color);
+  __set_pixel(x + 1, y, __ink_color);
+  __set_pixel(x, y + 1, __ink_color);
+  __set_pixel(x + 1, y + 1, __ink_color);
 }
 
 function cls() {
-  var color = ink_color;
+  var color = __ink_color;
   for (var y = 0; y < __screen_height; y++) {
     for (var x = 0; x < __screen_width; x++) {
       __set_pixel(x, y, color);
     }
   }
-  redraw = 1;
-  ink_color = 1 - color;
+  __redraw = 1;
+  __ink_color = 1 - color;
   now();
 }
 
-var redraw = 0;
+var __redraw = 0;
+var __last_t = -1;
 function __step(i) {
-  if (redraw > 0) {
-    redraw = 0;
+  var t = Date.now();
+  if (__last_t != t) {
+    __last_t = t;
+    drawClock();
+  }
+  if (__redraw > 0) {
+    __redraw = 0;
     return 1;
   }
   return 0;
 }
 
-function now() { redraw = 1; }
+function now() { __redraw = 1; }
 
 function glyph() {
   var w = __screen_width, h = __screen_height;
@@ -538,12 +544,13 @@ g.reset();
 
 if (1) {
   var cols = 3;
-  var rows = 6;
+  var rows = 10;
   var lastSlot = -1;
 
   function drawClock() {
     var now = new Date();
     var slot = now.getMinutes() % (cols*rows);
+    var ink = (now.getMinutes() / (cols*rows)) % 2;
     var w = g.getWidth();
     var h = g.getHeight();
     var cellW = w / cols;
@@ -557,18 +564,14 @@ if (1) {
     var y2;
     var time;
 
-    print("Draw...");
-
     // Redraw only when the minute changes.
     if (slot === lastSlot) return;
     lastSlot = slot;
 
-    g.setBgColor(0, 0, 0);
+    g.setBgColor(1-ink, 1-ink, 1-ink);
     g.clear();
 
     for (i = 0; i < 30; i++) {
-      print("Slot", i, slot);
-      
       col = i % cols;
       row = Math.floor(i / cols);
 
@@ -578,31 +581,30 @@ if (1) {
       y2 = Math.floor((row + 1) * cellH) - 1;
 
       if (i < slot) {
-        print("Completed");
-        g.setColor(0, 1, 0); // completed: green
+        g.setColor(ink, ink, ink);
         g.fillRect(x1, y1, x2, y2);
       }
 
-      print("New ones");
-      g.setColor(1, 1, 1);
-      g.drawRect(x1, y1, x2, y2);
+      if (0) {
+        g.setColor(1, 1, 1);
+        g.drawRect(x1, y1, x2, y2);
+      }
 
       if (i === slot) {
-        print("This slot");
-
         time = ("0" + now.getHours()).slice(-2) + ":" +
           ("0" + now.getMinutes()).slice(-2);
 
         print("Time", time);
-        
+
+        g.setColor(ink, ink, ink);
         g.setFont("bitmap", 3);
         g.setFontAlign(0, 0);
         g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
       }
-      print("Paint done");
     }
 
     g.flip();
+    __redraw = 1;
   }
 
 //  drawClock();
@@ -611,3 +613,4 @@ if (1) {
 
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
+ 
