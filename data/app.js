@@ -184,8 +184,9 @@ function __draw_line(x1, y1, x2, y2, color) {
 }
 
 function __make_color(r, green, b) {
-  return 
-         (green >= 0.5 ? 1 : 0);
+  if (green >= 0.5)
+    return 1;
+  return 0;
 }
 
 function __ellipse(x1, y1, x2, y2, filled, color) {
@@ -533,8 +534,80 @@ g.wrapString = function (text, maxWidth) {
   return lines;
 };
 
-
 g.reset();
+
+if (1) {
+  var cols = 3;
+  var rows = 6;
+  var lastSlot = -1;
+
+  function drawClock() {
+    var now = new Date();
+    var slot = now.getMinutes() % (cols*rows);
+    var w = g.getWidth();
+    var h = g.getHeight();
+    var cellW = w / cols;
+    var cellH = h / rows;
+    var i;
+    var col;
+    var row;
+    var x1;
+    var y1;
+    var x2;
+    var y2;
+    var time;
+
+    print("Draw...");
+
+    // Redraw only when the minute changes.
+    if (slot === lastSlot) return;
+    lastSlot = slot;
+
+    g.setBgColor(0, 0, 0);
+    g.clear();
+
+    for (i = 0; i < 30; i++) {
+      print("Slot", i, slot);
+      
+      col = i % cols;
+      row = Math.floor(i / cols);
+
+      x1 = Math.floor(col * cellW);
+      y1 = Math.floor(row * cellH);
+      x2 = Math.floor((col + 1) * cellW) - 1;
+      y2 = Math.floor((row + 1) * cellH) - 1;
+
+      if (i < slot) {
+        print("Completed");
+        g.setColor(0, 1, 0); // completed: green
+        g.fillRect(x1, y1, x2, y2);
+      }
+
+      print("New ones");
+      g.setColor(1, 1, 1);
+      g.drawRect(x1, y1, x2, y2);
+
+      if (i === slot) {
+        print("This slot");
+
+        time = ("0" + now.getHours()).slice(-2) + ":" +
+          ("0" + now.getMinutes()).slice(-2);
+
+        print("Time", time);
+        
+        g.setFont("bitmap", 3);
+        g.setFontAlign(0, 0);
+        g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
+      }
+      print("Paint done");
+    }
+
+    g.flip();
+  }
+
+//  drawClock();
+//  setInterval(drawClock, 1000);
+}
 
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
