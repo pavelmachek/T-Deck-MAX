@@ -415,5 +415,4 @@ var g = {
   }
 };
 
-
- 
+// FIXME: There really should be ^@ at end of file, but that interferes with git
