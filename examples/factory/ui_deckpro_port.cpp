@@ -740,6 +740,8 @@ void ui_motor_stop(void)
     motor_drv.stop();
 }
 
+extern void display_sleep(void);
+
 void ui_system_sleep(void)
 {
     // extern TouchDrvCSTXXX touch;
@@ -747,6 +749,8 @@ void ui_system_sleep(void)
     // touch.sleep();
     hyn_sleep();
 
+    display_sleep();
+    
     if (lora_is_available()) {
         lora_sleep();
     }
