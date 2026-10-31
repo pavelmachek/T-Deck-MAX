@@ -196,7 +196,7 @@ static const char js_code[] =
     "  return 0;\n"
     "}\n";
 
-int lua_init(uint8_t *_screen, int _sx, int _sy)
+int js_init(uint8_t *_screen, int _sx, int _sy)
 {
     if (!_screen || _sx <= 0 || _sy <= 0)
         return -1;
@@ -248,7 +248,7 @@ static int js_call(const char *name, int nargs, int *args, int *result)
     return 0;
 }
 
-static int js_exec_input(void)
+static int __js_exec_input(void)
 {
     input[input_pos] = '\0';
     Serial.printf("\n# exec, %u chars\n", (unsigned)input_pos);
@@ -260,13 +260,13 @@ static int js_exec_input(void)
     return rc;
 }
 
-int lua_exec_input(void)
+int js_exec_input(void)
 {
-    return js_exec_input();
+    return __js_exec_input();
 }
 
 /* Returns 1 if the screen should be redrawn. */
-int lua_step(void)
+int js_step(void)
 {
     if (!ctx)
         return -1;
@@ -276,7 +276,7 @@ int lua_step(void)
 
         if (c == 2) { /* Ctrl-B executes the accumulated input. */
             if (input_pos < sizeof(input))
-                js_exec_input();
+                __js_exec_input();
             else
                 Serial.println("Input buffer full");
 
@@ -303,7 +303,7 @@ int lua_step(void)
     return result;
 }
 
-int lua_touch(int down, int x, int y)
+int js_touch(int down, int x, int y)
 {
     int args[] = { down, x, y };
     int result = 0;
@@ -314,7 +314,7 @@ int lua_touch(int down, int x, int y)
     return result;
 }
 
-int lua_key(int press, int v)
+int js_key(int press, int v)
 {
     int args[] = { press, v };
     int result = 0;
@@ -325,7 +325,7 @@ int lua_key(int press, int v)
     return result;
 }
 
-void lua_done(void)
+void js_done(void)
 {
     if (ctx) {
         duk_destroy_heap(ctx);

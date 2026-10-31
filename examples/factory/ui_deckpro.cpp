@@ -47,7 +47,7 @@ static lv_timer_t *touch_chk_timer = NULL;
 static lv_timer_t *taskbar_update_timer = NULL;
 static lv_timer_t *low_battery_timer = NULL;
 static lv_timer_t *phone_state_timer = NULL;
-static lv_timer_t *lua_timer = NULL;
+static lv_timer_t *js_timer = NULL;
 static lv_obj_t *label_list[10] = {0};
 uint16_t taskbar_statue[TASKBAR_ID_MAX] = {0};
 
@@ -141,7 +141,7 @@ static struct menu_btn menu_btn_list[] =
     {SCREEN10_ID, &img_music,   "Music",    23,     13},  // Page two
     {SCREEN11_ID, &img_sleep,   "Sleep",    95,     13},  // 
     {SCREEN12_ID, &img_motor,   "Motor",    167,    13},  // 
-    {SCREEN666_ID, &img_test,    "Lua",      23,     101},  // 
+    {SCREEN666_ID, &img_test,    "JS",      23,     101},  // 
 };
 
 static void menu_btn_event_cb(lv_event_t *e)
@@ -3461,7 +3461,7 @@ static scr_lifecycle_t screen9 = {
 };
 #endif
 
-//************************************[ screen 666 ]****************************************** Lua
+//************************************[ screen 666 ]****************************************** Js
 #if 1
 static void scr666_btn_event_cb(lv_event_t * e)
 {
@@ -3502,26 +3502,26 @@ void set_img(lv_obj_t * label)
 #endif
 }
 
-static lv_obj_t * lua_label;
+static lv_obj_t * js_label;
 
-static void lua_timer_cb(lv_timer_t *t)
+static void js_timer_cb(lv_timer_t *t)
 {
     (void)t;
 
-    int r = lua_step();
-    if (lua_label && r == 1) {
-      set_img(lua_label);
+    int r = js_step();
+    if (js_label && r == 1) {
+      set_img(js_label);
     }
 
     char key = '\0';
     int event_state = KEYPAD_RELEASE;
 
     while (keypad_get_event(&key, &event_state)) {
-	lua_key(event_state != KEYPAD_RELEASE, key);
+	js_key(event_state != KEYPAD_RELEASE, key);
     }
 }
 
-static void lua_touch_event_handler(lv_event_t * e) {
+static void js_touch_event_handler(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
     
     // Retrieve the label we passed in as user_data
@@ -3532,19 +3532,19 @@ static void lua_touch_event_handler(lv_event_t * e) {
     lv_indev_get_point(lv_indev_get_act(), &coords);
 
     if (code == LV_EVENT_PRESSED) {
-	lua_touch(1, coords.x, coords.y);
+	js_touch(1, coords.x, coords.y);
     } 
     if (code == LV_EVENT_PRESSING) {
-	lua_touch(2, coords.x, coords.y);
+	js_touch(2, coords.x, coords.y);
     } 
     if (code == LV_EVENT_RELEASED) {
-	lua_touch(0, coords.x, coords.y);
+	js_touch(0, coords.x, coords.y);
     }
 }
 
 static void setup_screen_touch(lv_obj_t * label) {
       lv_obj_add_flag(label, LV_OBJ_FLAG_CLICKABLE);
-      lv_obj_add_event_cb(label, lua_touch_event_handler, LV_EVENT_ALL, label);
+      lv_obj_add_event_cb(label, js_touch_event_handler, LV_EVENT_ALL, label);
 }
 
 static void create666(lv_obj_t *parent)
@@ -3552,22 +3552,22 @@ static void create666(lv_obj_t *parent)
   //    printf("LV_COLOR_DEPTH=%d\n", LV_COLOR_DEPTH);
   //    printf("sizeof(lv_color_t)=%zu\n", sizeof(lv_color_t));
 
-    lua_init(screen_buf, SX, SY);
+    js_init(screen_buf, SX, SY);
 
     if (1) {
-      lua_label = lv_img_create(parent);
+      js_label = lv_img_create(parent);
 	//lv_img_set_src(label, &img_start);
 	Serial.print(F("set img"));
 	
-	set_img(lua_label);
-	lv_obj_set_width(lua_label, SX);
-	lv_obj_set_height(lua_label, SY);
-	lv_obj_align(lua_label, LV_ALIGN_TOP_LEFT, 0, 320-SY);
-	//lv_img_set_offset_y(lua_label, 320-SY);
+	set_img(js_label);
+	lv_obj_set_width(js_label, SX);
+	lv_obj_set_height(js_label, SY);
+	lv_obj_align(js_label, LV_ALIGN_TOP_LEFT, 0, 320-SY);
+	//lv_img_set_offset_y(js_label, 320-SY);
 
-	setup_screen_touch(lua_label);
+	setup_screen_touch(js_label);
 
-	//lv_obj_center(lua_label);
+	//lv_obj_center(js_label);
 	Serial.print(F("label done"));
 
 	// back 
@@ -3578,7 +3578,7 @@ static void create666(lv_obj_t *parent)
     lv_obj_set_width(label, lv_pct(95));
     lv_obj_set_style_text_font(label, FONT_BOLD_SIZE_15, LV_PART_MAIN);
     lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-    lv_label_set_text(label, "Lua output goes here.");
+    lv_label_set_text(label, "Js output goes here.");
     lv_obj_center(label);
 
     // back 
@@ -4355,8 +4355,8 @@ void ui_deckpro_entry(void)
     phone_state_timer = lv_timer_create(phone_state_timer_cb, 30, NULL);
     lv_timer_ready(phone_state_timer);
 
-    lua_timer = lv_timer_create(lua_timer_cb, 30, NULL);
-    lv_timer_ready(lua_timer);
+    js_timer = lv_timer_create(js_timer_cb, 30, NULL);
+    lv_timer_ready(js_timer);
     
     scr_mgr_init();
 
@@ -4380,7 +4380,7 @@ void ui_deckpro_entry(void)
     scr_mgr_register(SCREEN8_1_ID,  &screen8_1);    //  - Calling / In Call
     scr_mgr_register(SCREEN8_2_ID,  &screen8_2);    //  - Incoming Call
     scr_mgr_register(SCREEN8_3_ID,  &screen8_3);    //  - AT Debug
-    scr_mgr_register(SCREEN666_ID,  &screen666);    // Lua
+    scr_mgr_register(SCREEN666_ID,  &screen666);    // Js
     scr_mgr_register(SCREEN9_ID,    &screen9);      // Shutdown
     scr_mgr_register(SCREEN10_ID,   &screen10);     // Music
     scr_mgr_register(SCREEN11_ID,   &screen11);     // Sleep
