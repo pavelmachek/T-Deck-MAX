@@ -3438,7 +3438,7 @@ static void create9(lv_obj_t *parent)
     else 
     {
         lv_obj_t * img = lv_img_create(parent);
-        lv_img_set_src(img, &img_start);
+        lv_img_set_src(img, &img_sleep);
         lv_obj_center(img);
 
         lv_timer_create(shutdown_timer_event, 2000, (void *)parent);
