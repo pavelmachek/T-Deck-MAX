@@ -415,6 +415,126 @@ var g = {
   }
 };
 
+var __font3x5 = {
+  "A":"2,5,7,5,5", "B":"6,5,6,5,6", "C":"3,4,4,4,3",
+  "D":"6,5,5,5,6", "E":"7,4,6,4,7", "F":"7,4,6,4,4",
+  "G":"3,4,5,5,3", "H":"5,5,7,5,5", "I":"7,2,2,2,7",
+  "J":"1,1,1,5,2", "K":"5,5,6,5,5", "L":"4,4,4,4,7",
+  "M":"5,7,7,5,5", "N":"5,7,7,7,5", "O":"2,5,5,5,2",
+  "P":"6,5,6,4,4", "Q":"2,5,5,3,1", "R":"6,5,6,5,5",
+  "S":"3,4,2,1,6", "T":"7,2,2,2,2", "U":"5,5,5,5,7",
+  "V":"5,5,5,5,2", "W":"5,5,7,7,5", "X":"5,5,2,5,5",
+  "Y":"5,5,2,2,2", "Z":"7,1,2,4,7",
+
+  "0":"7,5,5,5,7", "1":"2,6,2,2,7", "2":"6,1,7,4,7",
+  "3":"6,1,3,1,6", "4":"5,5,7,1,1", "5":"7,4,6,1,6",
+  "6":"3,4,7,5,7", "7":"7,1,2,2,2", "8":"7,5,7,5,7",
+  "9":"7,5,7,1,6",
+
+  "-":"0,0,7,0,0", "_":"0,0,0,0,7", ".":"0,0,0,0,2",
+  ":":"0,2,0,2,0", "!":"2,2,2,0,2", "?":"6,1,2,0,2",
+  "/":"1,1,2,4,4", "+":"0,2,7,2,0", " ":"0,0,0,0,0"
+};
+
+var __fontScale = 1;
+var __fontAlignX = -1;
+var __fontAlignY = -1;
+
+function __glyphWidth() {
+  return 4 * __fontScale; // 3 pixels plus one-pixel spacing, scaled
+}
+
+function __draw_glyph(ch, x, y) {
+  var rows = __font3x5[ch] || __font3x5[" "];
+  var row;
+  var col;
+  var bit;
+  var sx;
+  var sy;
+
+  rows = rows.split(",");
+
+  for (row = 0; row < 5; row++) {
+    for (col = 0; col < 3; col++) {
+      bit = 1 << (2 - col);
+      if ((parseInt(rows[row], 10) & bit) !== 0) {
+        for (sy = 0; sy < __fontScale; sy++) {
+          for (sx = 0; sx < __fontScale; sx++) {
+            __set_pixel(
+              x + col * __fontScale + sx,
+              y + row * __fontScale + sy,
+              __color
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+g.setFont = function (name, size) {
+  __fontScale = Math.max(1, Math.floor(size || 1));
+  return g;
+};
+
+g.setFontAlign = function (x, y) {
+  __fontAlignX = x || 0;
+  __fontAlignY = y || 0;
+  return g;
+};
+
+g.drawString = function (text, x, y) {
+  var s = String(text);
+  var width = s.length ? (s.length * 4 - 1) * __fontScale : 0;
+  var height = 5 * __fontScale;
+  var i;
+  var ch;
+
+  if (__fontAlignX === 0) x -= width / 2;
+  else if (__fontAlignX > 0) x -= width;
+
+  if (__fontAlignY === 0) y -= height / 2;
+  else if (__fontAlignY > 0) y -= height;
+
+  x = Math.round(x);
+  y = Math.round(y);
+
+  for (i = 0; i < s.length; i++) {
+    ch = s.charAt(i).toUpperCase();
+    __draw_glyph(ch, x + i * 4 * __fontScale, y);
+  }
+
+  return g;
+};
+
+g.wrapString = function (text, maxWidth) {
+  var words = String(text).split(/\s+/);
+  var lines = [];
+  var line = "";
+  var word;
+  var candidate;
+  var maxChars = Math.floor(maxWidth / (4 * __fontScale));
+
+  if (maxChars < 1) maxChars = 1;
+
+  for (var i = 0; i < words.length; i++) {
+    word = words[i];
+    candidate = line ? line + " " + word : word;
+
+    if (candidate.length > maxChars && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+
+  if (line) lines.push(line);
+  return lines;
+};
+
+
 g.reset();
+
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
