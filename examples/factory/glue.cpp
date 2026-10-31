@@ -8,6 +8,14 @@
 #include "utilities.h"
 #include "glue.h"
 
+#include <stdint.h>
+#include <stddef.h>
+
+extern const char app_js_start[] asm("_binary_data_app_js_start");
+extern const char app_js_end[]   asm("_binary_data_app_js_end");
+
+size_t js_size = app_js_end - app_js_start;
+
 static duk_context *ctx;
 static uint8_t *screen;
 static int sx, sy;
@@ -112,90 +120,6 @@ static int js_eval(const char *code)
     return 0;
 }
 
-static const char js_code[] =
-    "function add(a, b) { return a + b; }\n"
-    "\n"
-    "var ink_color = 0;\n"
-    "\n"
-    "function ink(x, y) {\n"
-    "  set_pixel(x, y, ink_color);\n"
-    "}\n"
-    "\n"
-    "function bink(x, y) {\n"
-    "  set_pixel(x, y, ink_color);\n"
-    "  set_pixel(x + 1, y, ink_color);\n"
-    "  set_pixel(x, y + 1, ink_color);\n"
-    "  set_pixel(x + 1, y + 1, ink_color);\n"
-    "}\n"
-    "\n"
-    "function cls() {\n"
-    "  var color = ink_color;\n"
-    "  for (var y = 0; y < screen_height; y++) {\n"
-    "    for (var x = 0; x < screen_width; x++) {\n"
-    "      set_pixel(x, y, color);\n"
-    "    }\n"
-    "  }\n"
-    "  redraw = 1;\n"
-    "  ink_color = 1 - color;\n"
-    "  now();\n"
-    "}\n"
-    "\n"
-    "var redraw = 0;\n"
-    "function step(i) {\n"
-    "  if (redraw > 0) {\n"
-    "    redraw = 0;\n"
-    "    return 1;\n"
-    "  }\n"
-    "  return 0;\n"
-    "}\n"
-    "\n"
-    "function now() { redraw = 1; }\n"
-    "\n"
-    "function glyph() {\n"
-    "  var w = screen_width, h = screen_height;\n"
-    "  var steps = Math.max(w, h);\n"
-    "  if (steps > 1) {\n"
-    "    for (var i = 0; i < steps; i++) {\n"
-    "      var x = Math.floor(i * (w - 1) / (steps - 1));\n"
-    "      var y = Math.floor(i * (h - 1) / (steps - 1));\n"
-    "      ink(x, y);\n"
-    "      ink(x, h - 1 - y);\n"
-    "    }\n"
-    "  }\n"
-    "\n"
-    "  var cx = (w - 1) / 2, cy = (h - 1) / 2;\n"
-    "  var radius = Math.floor(Math.min(w, h) / 4);\n"
-    "  var thickness = 1.5;\n"
-    "  for (var y = 0; y < h; y++) {\n"
-    "    for (var x = 0; x < w; x++) {\n"
-    "      var dx = x - cx, dy = y - cy;\n"
-    "      var distance = Math.sqrt(dx * dx + dy * dy);\n"
-    "      if (Math.abs(distance - radius) <= thickness) ink(x, y);\n"
-    "    }\n"
-    "  }\n"
-    "  now();\n"
-    "}\n"
-    "\n"
-    "function grey() {\n"
-    "  for (var y = 0; y < screen_height; y++) {\n"
-    "    for (var x = 0; x < screen_width; x++) {\n"
-    "      if (((x + y) % 2) !== 0) ink(x, y);\n"
-    "    }\n"
-    "  }\n"
-    "  now();\n"
-    "}\n"
-    "\n"
-    "function touch(d, x, y) {\n"
-    "  print('Touch:', d, x, y);\n"
-    "  bink(x, y);\n"
-    "  return 0;\n"
-    "}\n"
-    "\n"
-    "function key(press, v) {\n"
-    "  print('Key:', press, v);\n"
-    "  return 0;\n"
-    "}\n";
-
 int js_init(uint8_t *_screen, int _sx, int _sy)
 {
     if (!_screen || _sx <= 0 || _sy <= 0)
@@ -211,12 +135,10 @@ int js_init(uint8_t *_screen, int _sx, int _sy)
 
     js_register_globals();
 
-    if (js_eval(js_code) != 0)
+    if (js_eval(app_js_start) != 0)
         return -1;
 
-    js_eval("print('Hello, world!');");
-    js_eval("print('result =', add(2, 3));");
-
+    js_eval("print('js: Scripting initialized.');");
     return 0;
 }
 
