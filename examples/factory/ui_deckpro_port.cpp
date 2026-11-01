@@ -867,16 +867,22 @@ void ui_system_sleep_deep(void)
     // gpio_hold_en((gpio_num_t)BOARD_A7682E_PWRKEY);
     // gpio_deep_sleep_hold_en();
 
-    // esp_sleep_enable_ext0_wakeup((gpio_num_t)ENCODER_KEY, 0);                            
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);   // Hibernate using user keys
+    // esp_sleep_enable_ext0_wakeup((gpio_num_t)ENCODER_KEY, 0);
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);
+    // Hibernate using user keys
     esp_deep_sleep_start();
     //esp_light_sleep_start();
 }
 
 void ui_system_sleep(void)
 {
-    display_sleep();
+    disp_sleep(".oO Light sleep");
     Serial.print("Entering light sleep");
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);     esp_light_sleep_start();
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);
+    if (0) {
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_TOUCH_INT), ESP_EXT1_WAKEUP_ANY_LOW);
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_KEYBOARD_INT), ESP_EXT1_WAKEUP_ANY_LOW);
+    }
+    esp_light_sleep_start();
     Serial.print("Exited light sleep");
 }
