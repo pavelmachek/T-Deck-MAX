@@ -878,11 +878,8 @@ void ui_system_sleep(void)
 {
     disp_sleep(".oO Light sleep");
     Serial.print("Entering light sleep");
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);
-    if (0) {
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_TOUCH_INT), ESP_EXT1_WAKEUP_ANY_LOW);
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_KEYBOARD_INT), ESP_EXT1_WAKEUP_ANY_LOW);
-    }
+    // Can't get KEYBOARD_INT to work. Touch works.
+    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN) | (1UL << BOARD_TOUCH_INT) | (1UL << BOARD_A7682E_RI), ESP_EXT1_WAKEUP_ANY_LOW);
     esp_light_sleep_start();
     Serial.print("Exited light sleep");
 }
