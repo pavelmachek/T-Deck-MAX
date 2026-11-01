@@ -1361,13 +1361,13 @@ void disp_partial_refr_for(uint32_t duration_ms)
     disp_partial_refr_until_ms = millis() + duration_ms;
 }
 
-void display_sleep(void)
+void disp_sleep(char *msg)
 {
     display.setFullWindow();
     display.firstPage();
     display.fillScreen(GxEPD_WHITE);
-    display.setCursor(100, 100);
-    display.print(". o O sleep");
+    display.setCursor(10, 100);
+    display.print(msg);
     while (display.nextPage());
 }
 

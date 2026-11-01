@@ -67,5 +67,6 @@ union flush_buf_pixel
  * *******************************************************************************/
 void disp_full_refr(void); // Next global refresh
 void disp_partial_refr_for(uint32_t duration_ms);
+void disp_sleep(char *msg);
 
 #endif
