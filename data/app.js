@@ -1,3 +1,7 @@
+/*
+ * Interface to C
+ */
+
 var __ink_color = 0;
 
 function __draw_hline(x1, x2, y, color) {
@@ -60,10 +64,13 @@ function cls() {
 var __redraw = 0;
 var __last_t = -1;
 function __step(i) {
+  if (0) {
+    // FIXME
   var t = Date.now();
   if (__last_t != t) {
     __last_t = t;
     drawClock();
+  }
   }
   if (__redraw > 0) {
     __redraw = 0;
@@ -73,6 +80,10 @@ function __step(i) {
 }
 
 function now() { __redraw = 1; }
+
+/*
+ * Test graphics
+ */
 
 function glyph() {
   var w = __screen_width, h = __screen_height;
@@ -109,16 +120,24 @@ function grey() {
 }
 
 function __touch(d, x, y) {
-  print('Touch:', d, x, y);
-  bink(x, y);
-  if (!d) now();
+  drag = {}
+  drag.b = d;
+  drag.x = x;
+  drag.y = y;
+  __onTouch(drag);
   return 0;
 }
 
 function __key(press, v) {
+  /* FIXME */
   print('Key:', press, v);
   return 0;
 }
+
+/*
+ * Graphics implementation
+ *
+ */
 
 //g.getWidth = function() { return ; };
 //g.getHeight = function() { return ; };
@@ -540,9 +559,67 @@ g.wrapString = function (text, maxWidth) {
   return lines;
 };
 
+/*
+ * Input and dummy functions
+ */
+
+var bangle_on_map = {}
+
+function bangle_on(event, callback) {
+  bangle_on_map[event] = callback;
+  if (event == "lock")
+    callback();
+}
+
+function bangle_setUI(map) {
+  if (map.drag) {
+    bangle_on_map['drag'] = map.drag;
+  }
+}
+
+function __onTouch(drag) {
+  var d = bangle_on_map['drag'];
+  if (d) {
+    d(drag);
+  }
+  var d = bangle_on_map['touch'];
+  if (d) {
+    d(drag.b, drag);
+  }
+}
+
+// Some functionality is available in pavel's Espruino tree
+Bangle = {};
+Bangle.setGPSPower = function () { print("setGPSpower() not implemented"); };
+Bangle.loadWidgets = function () { };
+Bangle.drawWidgets = function () { };
+Bangle.setUI =  bangle_setUI;
+Bangle.project = function () { print("project unimplemented, available elsewhere") };
+Bangle.isCharging = function () { return false; }
+Bangle.isCompassOn = function () { return false; }
+Bangle.setCompassPower = function (v) {}
+Bangle.getAccel = function (v) { print("getAccel() not implemented"); }
+Bangle.on = bangle_on;
+Bangle.buzz = function (v) { print("Buzz requested"); }
+Bangle.getGPSFix = function () { print("gps not implemented"); }
+Bangle.getCompass = function () { print("compass not implemented"); }
+Bangle.isLocked = function() { return false; }
+Bangle.getHealthStatus = function() { return { steps : 1234 } }
+Bangle.http = function () { print("http not implemented, available elsewhere"); }
+Puck = {}
+Puck.light = function () { print("light not implemented"); }
+WIDGETS = false;
+E = {};
+E.getBattery = function () { return 100; }
+const BTN1 = 1;
+
 g.reset();
 
-if (1) {
+/*
+ * Example application: time display
+ */
+
+
   var cols = 3;
   var rows = 10;
   var lastSlot = -1;
@@ -551,7 +628,7 @@ if (1) {
     var now = new Date();
     var slot = now.getMinutes() % (cols*rows);
     // 29->30 transition is wrong, it goes from all white to all black
-    var ink = (now.getMinutes() / (cols*rows)) % 2;
+    var ink = Math.floor(now.getMinutes() / (cols*rows)) % 2;
     var w = g.getWidth();
     var h = g.getHeight();
     var cellW = w / cols;
@@ -610,8 +687,15 @@ if (1) {
 
 //  drawClock();
 //  setInterval(drawClock, 1000);
-}
 
+
+/*
+ * Example application: drawing
+ 
+Bangle.js2, give me simple, black & white drawing application. Should
+allow brush selection and white/black color select.
+
+*/
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  
