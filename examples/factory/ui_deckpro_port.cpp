@@ -880,7 +880,8 @@ void ui_system_sleep(void)
     Serial.print("Entering light sleep");
     // Can't get KEYBOARD_INT to work. Touch works.
     esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN) | (1UL << BOARD_TOUCH_INT) | (1UL << BOARD_A7682E_RI), ESP_EXT1_WAKEUP_ANY_LOW);
-    esp_sleep_enable_timer_wakeup(1ULL * 60 * 1000000); 
+    // Wake up every minute; works, but we want to test power
+    // esp_sleep_enable_timer_wakeup(1ULL * 60 * 1000000); 
     esp_light_sleep_start();
     Serial.print("Exited light sleep");
 }
