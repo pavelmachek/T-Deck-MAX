@@ -43,6 +43,7 @@ static duk_ret_t js_get_pixel(duk_context *ctx)
         return duk_error(ctx, DUK_ERR_RANGE_ERROR,
                          "pixel coordinates out of bounds");
 
+    // FIXME
     int i = y * sx + x;
     duk_push_int(ctx, (screen[i / 8] & (0x80U >> (i % 8))) != 0);
     return 1;
@@ -55,8 +56,12 @@ static duk_ret_t js_set_pixel(duk_context *ctx)
     int value = duk_require_int(ctx, 2);
 
     if (x < 0 || x >= sx || y < 0 || y >= sy)
+      return 1;
+    /*
+      We want to avoid drawing out of bounds, for compatibility with Bangle. 
         return duk_error(ctx, DUK_ERR_RANGE_ERROR,
                          "pixel coordinates out of bounds");
+			*/
     if (value < 0 || value > 255)
         return duk_error(ctx, DUK_ERR_RANGE_ERROR,
                          "pixel value must be between 0 and 255");
