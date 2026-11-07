@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 #include "utilities.h"
+#include "factory.h"
 #include "glue.h"
 
 #include <stdint.h>
@@ -83,9 +84,12 @@ static duk_ret_t js_get_hardware(duk_context *ctx)
     int val = -1;
 
     switch (reg) {
-    case 0x0000:
-        val = getCpuFrequencyMhz();
-	break;
+    case 0x0000: val = getCpuFrequencyMhz(); break;
+    case 0x0100: val = peri_init_st[E_PERI_BQ27220]; break;
+    case 0x0101: val = bq27220.getIsCharging(); break;
+    case 0x0102: val = bq27220.getVoltage(); break;
+    case 0x0103: val = bq27220.getTemperature(); break;
+    case 0x0104: val = bq27220.getCurrent(); break;
     default:
         return duk_error(ctx, DUK_ERR_RANGE_ERROR,
 			 "unknown value in get_hardware");

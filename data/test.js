@@ -28,3 +28,9 @@ print("cpu mhz:", __get_hardware(0));
 __set_hardware(0, 40);
 __set_hardware(0, 10);
 # __set_hardware(0, 1); breaks system
+
+print("bat is valid", __get_hardware(0x100));
+print("bat is charging", __get_hardware(0x101));
+print("bat voltage", __get_hardware(0x102));
+print("bat temperature", __get_hardware(0x103));
+print("bat current", __get_hardware(0x104));
