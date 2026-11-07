@@ -735,30 +735,34 @@ allow brush selection and white/black color select.
 
     g.setFont("Vector", (TOOLBAR - WIDGETS) * 0.5);
 
+    var y1 = WIDGETS + 4;
+    var y2 = y1 + 4;
+    var y3 = WIDGETS + TOOLBAR - 4;
+
     // Black brush
-    g.fillRect(5, 29, 40, 46);
+    g.fillRect(5, y1, 40, y3);
     g.setColor(1, 1, 1);
-    g.drawString("B", 19, 33);
+    g.drawString("B", 19, y2);
 
     // White brush
     g.setColor(1, 1, 1);
-    g.fillRect(48, 29, 83, 46);
+    g.fillRect(48, y1, 83, y3);
     black();
-    g.drawRect(48, 29, 83, 46);
-    g.drawString("W", 58, 33);
+    g.drawRect(48, y1, 83, y3);
+    g.drawString("W", 58, y2);
 
     // Brush size
     black();
-    g.drawString("S" + brush, 91, 33);
+    g.drawString("S" + brush, 91, y2);
 
     // Clear
-    g.drawRect(137, 29, 171, 46);
-    g.drawString("CLR", 140, 33);
+    g.drawRect(137, y1, 171, y3);
+    g.drawString("CLR", 140, y2);
   }
 
   function clearCanvas() {
     white();
-    g.fillRect(0, 51, W - 1, H - 1);
+    g.fillRect(0, TOOLBAR+1, W - 1, H - 1);
   }
 
   function drawPoint(x, y, px, py) {
