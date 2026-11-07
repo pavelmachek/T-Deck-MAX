@@ -3557,7 +3557,6 @@ static void create666(lv_obj_t *parent)
     if (1) {
       js_label = lv_img_create(parent);
 	//lv_img_set_src(label, &img_start);
-	Serial.print(F("set img"));
 	
 	set_img(js_label);
 	lv_obj_set_width(js_label, SX);
@@ -3568,7 +3567,6 @@ static void create666(lv_obj_t *parent)
 	setup_screen_touch(js_label);
 
 	//lv_obj_center(js_label);
-	Serial.print(F("label done"));
 
 	// back 
 	scr_back_btn_create(parent, "Back", scr8_btn_event_cb);
