@@ -561,6 +561,15 @@ g.wrapString = function (text, maxWidth) {
 };
 
 /*
+ * Ink/special support for T-Dev-Max
+ */
+
+var ink = {
+  isInk: function () { return true; },
+  update: function () { __redraw = 1; }
+};
+
+/*
  * Input and dummy functions
  */
 
@@ -702,8 +711,8 @@ allow brush selection and white/black color select.
 
   var W = g.getWidth();
   var H = g.getHeight();
-  var WIDGETS = 24;
-  var TOOLBAR = 50;
+  var WIDGETS = 0;
+  var TOOLBAR = WIDGETS+26;
   var color = 0;
   var brush = 2;
   var brushes = [1, 2, 4];
@@ -802,6 +811,7 @@ allow brush selection and white/black color select.
         last = {x:x, y:y};
       } else touch(e);
     } else {
+      ink.update();
       last = null;
     }
   }
