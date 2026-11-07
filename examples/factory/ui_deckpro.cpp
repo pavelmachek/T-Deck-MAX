@@ -4153,7 +4153,7 @@ static bool low_battery_is_power_connected(void)
         }
     }
 
-    if(ui_battery_27220_is_vaild() && ui_battery_27220_get_input()) {
+    if(ui_battery_27220_is_valid() && ui_battery_27220_get_input()) {
         return true;
     }
 
@@ -4166,7 +4166,7 @@ static bool low_battery_should_shutdown(void)
         return false;
     }
 
-    if(ui_battery_27220_is_vaild()) {
+    if(ui_battery_27220_is_valid()) {
         uint16_t percent = ui_battery_27220_get_percent();
         uint16_t voltage_mv = ui_battery_27220_get_voltage();
 

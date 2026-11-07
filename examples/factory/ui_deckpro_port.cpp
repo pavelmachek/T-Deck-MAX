@@ -354,7 +354,7 @@ const char * ui_batt_25896_get_vbus_st(void) { return PPM.getBusStatusString(); 
 const char * ui_batt_25896_get_ntc_st(void)  { return PPM.getNTCStatusString(); }
 
 /* 27220 */
-bool ui_battery_27220_is_vaild(void)            {return peri_init_st[E_PERI_BQ27220]; }
+bool ui_battery_27220_is_valid(void)            { return peri_init_st[E_PERI_BQ27220]; }
 bool ui_battery_27220_get_input(void)           { return bq27220.getIsCharging();}
 bool ui_battery_27220_get_charge_finish(void)   { return bq27220.getCharingFinish();}
 uint16_t ui_battery_27220_get_status(void) 

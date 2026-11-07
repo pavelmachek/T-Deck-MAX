@@ -145,7 +145,7 @@ const char * ui_batt_25896_get_vbus_st(void);
 const char * ui_batt_25896_get_ntc_st(void);
 
 /* 27220 */
-bool ui_battery_27220_is_vaild(void);
+bool ui_battery_27220_is_valid(void);
 bool ui_battery_27220_get_input(void);
 bool ui_battery_27220_get_charge_finish(void);
 uint16_t ui_battery_27220_get_status(void);
