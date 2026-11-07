@@ -90,6 +90,7 @@ void BHI260AP_get_val(int val_type, float *x, float *y, float *z)
 
 bool BHI260AP_init(void)
 {
+  return false;
     // Set the reset pin and interrupt pin, if any
     bhy.setPins(BOARD_GYROSCOPE_RST, BOARD_GYROSCOPE_INT);
 

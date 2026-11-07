@@ -1053,6 +1053,7 @@ static void A7682E_cleanup(void)
 
 static bool A7682E_init(void)
 {
+return false;
     Serial.println("Place your board outside to catch satelite signal");
     phone_snapshot_reset(false);
 
