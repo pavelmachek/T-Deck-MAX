@@ -104,9 +104,9 @@ static duk_ret_t js_set_hardware(duk_context *ctx)
     int val = duk_require_int(ctx, 1);
 
     switch (reg) {
-    case 0x0000:
-        setCpuFrequencyMhz(val);
-	return 0;
+    case 0x0000: setCpuFrequencyMhz(val); return 0;
+    case 0x0200: analogWrite(BOARD_KEYBOARD_LED, val); return 0; /* 0..255 */
+    case 0x0201: analogWrite(BOARD_EPD_BL, val); return 0; /* 0..255 */
     }
     
     return duk_error(ctx, DUK_ERR_RANGE_ERROR,

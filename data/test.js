@@ -34,3 +34,8 @@ print("bat is charging", __get_hardware(0x101));
 print("bat voltage", __get_hardware(0x102));
 print("bat temperature", __get_hardware(0x103));
 print("bat current", __get_hardware(0x104));
+
+__set_hardware(0x200, 0);
+__set_hardware(0x201, 0);
+__set_hardware(0x200, 48);
+__set_hardware(0x201, 48);
