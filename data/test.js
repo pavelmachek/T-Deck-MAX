@@ -34,6 +34,12 @@ print("bat is charging", __get_hardware(0x101));
 print("bat voltage", __get_hardware(0x102));
 print("bat temperature", __get_hardware(0x103));
 print("bat current", __get_hardware(0x104));
+print("bat percent", __get_hardware(0x105));
+print("remaining capacity", __get_hardware(0x106));
+print("design capacity", __get_hardware(0x107));
+print("full capacity", __get_hardware(0x108));
+print("state of health", __get_hardware(0x109));
+print("charging finished", __get_hardware(0x10a));
 
 __set_hardware(0x200, 0);
 __set_hardware(0x201, 0);
