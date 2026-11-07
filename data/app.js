@@ -499,6 +499,7 @@ function __draw_glyph(ch, x, y) {
 }
 
 g.setFont = function (name, size) {
+  size = size / 6;
   __fontScale = Math.max(1, Math.floor(size || 1));
   return g;
 };
