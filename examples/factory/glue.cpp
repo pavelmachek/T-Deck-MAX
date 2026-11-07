@@ -15,10 +15,9 @@
    This version of javascript does not seem to understand:
 
    let
-   () = { ... }
+   () => { ... }
    
 */
-   
 
 extern const char app_js_start[] asm("_binary_data_app_js_start");
 extern const char app_js_end[]   asm("_binary_data_app_js_end");
@@ -78,6 +77,39 @@ static duk_ret_t js_set_pixel(duk_context *ctx)
     return 0;
 }
 
+static duk_ret_t js_get_hardware(duk_context *ctx)
+{
+    int reg = duk_require_int(ctx, 0);
+    int val = -1;
+
+    switch (reg) {
+    case 0x0000:
+        val = getCpuFrequencyMhz();
+	break;
+    default:
+        return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+			 "unknown value in get_hardware");
+    }
+    duk_push_int(ctx, val);
+    return 1;
+}
+
+static duk_ret_t js_set_hardware(duk_context *ctx)
+{
+    int reg = duk_require_int(ctx, 0);
+    int val = duk_require_int(ctx, 1);
+
+    switch (reg) {
+    case 0x0000:
+        setCpuFrequencyMhz(val);
+	return 0;
+    }
+    
+    return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+		     "unknown value in set_hardware");
+}
+
+
 static duk_ret_t js_print(duk_context *ctx)
 {
     duk_idx_t count = duk_get_top(ctx);
@@ -113,6 +145,12 @@ static void js_register_globals(void)
 
     duk_push_c_function(ctx, js_set_pixel, 3);
     duk_put_global_string(ctx, "__set_pixel");
+
+    duk_push_c_function(ctx, js_get_hardware, 1);
+    duk_put_global_string(ctx, "__get_hardware");
+
+    duk_push_c_function(ctx, js_set_hardware, 2);
+    duk_put_global_string(ctx, "__set_hardware");
 
     duk_push_int(ctx, sx);
     duk_put_global_string(ctx, "__screen_width");

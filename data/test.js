@@ -23,3 +23,8 @@ g.setFont("", 5); g.drawString("hello world", 10, 10); now();
 g.setFont("", 3); g.drawString("hello world", 10, 70); now();
 
 now(); print(new Date()); drawClock();
+
+print("cpu mhz:", __get_hardware(0));
+__set_hardware(0, 40);
+__set_hardware(0, 10);
+# __set_hardware(0, 1); breaks system
