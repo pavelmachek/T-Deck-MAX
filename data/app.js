@@ -2,8 +2,6 @@
  * Interface to C
  */
 
-var __ink_color = 0;
-
 function __draw_hline(x1, x2, y, color) {
   var temp;
 
@@ -37,6 +35,46 @@ function __fill_rect(x1, y1, x2, y2, color) {
   }
 }
 
+var __redraw = 0;
+var __last_t = -1;
+function __step(i) {
+  if (0) {
+    // FIXME
+  var t = Date.now();
+  if (__last_t != t) {
+    __last_t = t;
+    drawClock();
+  }
+  }
+  if (__redraw > 0) {
+    __redraw = 0;
+    return 1;
+  }
+  return 0;
+}
+
+function __touch(d, x, y) {
+  drag = {}
+  drag.b = d;
+  drag.x = x;
+  drag.y = y;
+  __onTouch(drag);
+  return 0;
+}
+
+function __key(press, v) {
+  /* FIXME */
+  print('Key:', press, v);
+  return 0;
+}
+
+/*
+ * Graphics tests / example; they should go to module somewhere
+ */
+
+var __ink_color = 0;
+
+function now() { __redraw = 1; }
 
 function ink(x, y) {
   __set_pixel(x, y, __ink_color);
@@ -60,30 +98,6 @@ function cls() {
   __ink_color = 1 - color;
   now();
 }
-
-var __redraw = 0;
-var __last_t = -1;
-function __step(i) {
-  if (0) {
-    // FIXME
-  var t = Date.now();
-  if (__last_t != t) {
-    __last_t = t;
-    drawClock();
-  }
-  }
-  if (__redraw > 0) {
-    __redraw = 0;
-    return 1;
-  }
-  return 0;
-}
-
-function now() { __redraw = 1; }
-
-/*
- * Test graphics
- */
 
 function glyph() {
   var w = __screen_width, h = __screen_height;
@@ -119,20 +133,6 @@ function grey() {
   now();
 }
 
-function __touch(d, x, y) {
-  drag = {}
-  drag.b = d;
-  drag.x = x;
-  drag.y = y;
-  __onTouch(drag);
-  return 0;
-}
-
-function __key(press, v) {
-  /* FIXME */
-  print('Key:', press, v);
-  return 0;
-}
 
 /*
  * Graphics implementation
