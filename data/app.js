@@ -76,7 +76,7 @@ var __ink_color = 0;
 
 function now() { __redraw = 1; }
 
-function ink(x, y) {
+function sink(x, y) {
   __set_pixel(x, y, __ink_color);
 }
 
@@ -106,8 +106,8 @@ function glyph() {
     for (var i = 0; i < steps; i++) {
       var x = Math.floor(i * (w - 1) / (steps - 1));
       var y = Math.floor(i * (h - 1) / (steps - 1));
-      ink(x, y);
-      ink(x, h - 1 - y);
+      sink(x, y);
+      sink(x, h - 1 - y);
     }
   }
 
@@ -118,7 +118,7 @@ function glyph() {
     for (var x = 0; x < w; x++) {
       var dx = x - cx, dy = y - cy;
       var distance = Math.sqrt(dx * dx + dy * dy);
-      if (Math.abs(distance - radius) <= thickness) ink(x, y);
+      if (Math.abs(distance - radius) <= thickness) sink(x, y);
     }
   }
   now();
@@ -127,7 +127,7 @@ function glyph() {
 function grey() {
   for (var y = 0; y < __screen_height; y++) {
     for (var x = 0; x < __screen_width; x++) {
-      if (((x + y) % 2) !== 0) ink(x, y);
+      if (((x + y) % 2) !== 0) sink(x, y);
     }
   }
   now();
