@@ -641,8 +641,25 @@ var at = {
         if (flags != 1)
             return;
 
-        print("From modem ", flags, this.state, msg);
+      print("From modem ", flags, this.state, msg);
 
+      // +CMTI: "SM",1
+      // +CUSD: 1,"KREDIT: 50 Kc, platny do 26.11.2026
+      // Volani naplno - neomezene volani v CR na 240..."
+      //
+
+      if (msg.startsWith("+CMTI")) {
+        this.on_sms();
+        return;
+      }
+
+      if (msg.startsWith("+CUSD")) {
+        // FIXME: parse ussd
+        this.on_ussd(msg.slice(10));
+        return;
+      }
+
+      // FIXME: do state == 2 when expecting just an echo?
         if (this.state == 0) {
             if (msg == this.command) {
                 this.state = 1;
@@ -657,6 +674,15 @@ var at = {
             this.data.push(msg);
         }
     },
+
+  on_sms: function() {
+    this.sms_notify();
+  },
+
+  on_ussd: function(msg) {
+    print("Ussd:", msg);
+    this.sms_notify();
+  },
 
     cmd: function(c, cb) {
         if (this.state != 0) {
@@ -771,7 +797,48 @@ at.read_environment(function(env) {
         print("Message:", sms.body);
     }
 });
-  }
+  },
+
+  print: function(obj) {
+        if (obj instanceof Array) {
+            for (var i = 0; i < obj.length; i++)
+                print(obj[i]);
+        } else {
+            print(obj);
+        }
+    },
+
+  // FIXME: ussd does ok, and then reply comes
+    ussd: function(code, cb) {
+        this.cmd('AT+CUSD=1,"' + code + '",15', function(data) {
+            var result = {
+                status: null,
+                message: null
+            };
+
+            for (var i = 0; i < data.length; i++) {
+                var match = data[i].match(/^\+CUSD:\s*(\d+),"([\s\S]*)"(?:,\d+)?$/);
+
+                if (match) {
+                    result.status = parseInt(match[1], 10);
+                    result.message = match[2];
+                    break;
+                }
+            }
+
+            if (cb)
+                cb(result);
+        });
+    },
+
+  // Does not work with longer names
+  play_tone: function (name) {
+    at.cmd('AT+CCMXPLAY="'+name+'",0,0', print);
+  },
+
+  sms_notify: function () {
+    at.play_tone('Ding-01.wav');
+  },
 };
 
 function __from_modem(flags, msg) {
@@ -781,6 +848,8 @@ function __from_modem(flags, msg) {
 
 //at.cmd("AT+CBC", print);
 //AT+CPSI -- gives useful status, but already handled by core, so not suitable
+
+// at.ussd("*104*#", at.print);
 
 /*
   misc hw

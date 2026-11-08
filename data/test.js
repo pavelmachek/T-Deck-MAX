@@ -49,39 +49,9 @@ __set_hardware(0x201, 48);
 __set_hardware(0x300, 1);
 __write_at(0, "ATI");
 
-var m_state = 0;
-var m_callback = 0;
-var m_data = [];
-var m_command = "NEVER";
+at.cmd('AT+CCMXPLAY="c:/Low-soft-ding-02.wav",0,0', print);
+at.cmd('AT+CCMXPLAY="Ding-01.wav",0,0', print);
 
-function __from_modem(flags, msg) {
-  /* flags: 1 unhandled, 0 all messages */
-  if (flags != 1)
-    return;
-  print("From modem ", flags, m_state, msg);
-  if (m_state == 0) {
-    if (msg == m_command) {
-      m_state = 1;
-      return;
-    }
-  } else {
-    if (msg == "OK" || msg == "ERROR") {
-      m_state = 0;
-      m_callback(m_data);
-    }
-    m_data += [ msg ];
-  }
-}
+print("ABC".startsWith("AB"))
 
-function at_cmd(c, cb) {
-  if (m_state != 0) {
-    print("AT when busy");
-    return;
-  }
-  m_data = [];
-  m_callback = cb;
-  m_command = c;
-  __write_at(0, c);
-}
 
-at_cmd("AT+CPSI?", print);
