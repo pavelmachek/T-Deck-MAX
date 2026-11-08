@@ -68,11 +68,6 @@ function __key(press, v) {
   return 0;
 }
 
-function __from_modem(flags, msg) {
-  /* flags: 1 unhandled, 0 all messages */
-  print("From modem ", flags, msg);
-}
-
 /*
  * Graphics tests / example; they should go to module somewhere
  */
@@ -631,6 +626,122 @@ const BTN1 = 1;
 g.reset();
 
 /*
+
+  modem
+*/
+
+var at = {
+    state: 0,
+    callback: null,
+    data: [],
+    command: "NEVER",
+
+    from_modem: function(flags, msg) {
+        /* flags: 1 unhandled, 0 all messages */
+        if (flags != 1)
+            return;
+
+        print("From modem ", flags, this.state, msg);
+
+        if (this.state == 0) {
+            if (msg == this.command) {
+                this.state = 1;
+                return;
+            }
+        } else {
+            if (msg == "OK" || msg == "ERROR") {
+                this.state = 0;
+                this.callback(this.data);
+                return;
+            }
+            this.data.push(msg);
+        }
+    },
+
+    cmd: function(c, cb) {
+        if (this.state != 0) {
+            print("AT when busy");
+            return;
+        }
+
+        this.data = [];
+        this.callback = cb;
+        this.command = c;
+        __write_at(0, c);
+    }
+};
+
+function __from_modem(flags, msg) {
+  /* flags: 1 unhandled, 0 all messages */
+  at.from_modem(flags, msg);
+}
+
+//at.cmd("AT+CBC", print);
+//AT+CPSI -- gives useful status, but already handled by core, so not suitable
+
+/*
+  misc hw
+*/
+
+var hw = {
+    // CPU
+    cpu: {
+        get: function() {
+            return __get_hardware(0);
+        },
+        set: function(mhz) {
+            __set_hardware(0, mhz);
+        }
+    },
+
+    // Battery register map
+    battery: {
+        valid:            0x100,
+        charging:         0x101,
+        voltage:          0x102,
+        temperature:      0x103,
+        current:          0x104,
+        percent:          0x105,
+        remaining:        0x106,
+        design_capacity:  0x107,
+        full_capacity:    0x108,
+        health:           0x109,
+        charging_finished: 0x10a,
+
+        get: function(reg) {
+            return __get_hardware(reg);
+        }
+    }
+};
+
+hw.battery.read_all = function() {
+    var result = {};
+
+    for (var key in hw.battery) {
+        if (typeof hw.battery[key] == "number")
+            result[key] = hw.battery.get(hw.battery[key]);
+    }
+
+    return result;
+};
+
+hw.battery.print_all = function() {
+    var result = {};
+
+  print("Battery:")
+    for (var key in hw.battery) {
+        if (typeof hw.battery[key] == "number")
+          print(key, ":", hw.battery.get(hw.battery[key]));
+    }
+
+      print();
+
+    return result;
+};
+
+print(hw.battery.print_all());
+
+/*
  * Example application: time display
  */
 
@@ -842,6 +953,7 @@ allow brush selection and white/black color select.
     },
     drag: drag
   });
+
 
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
