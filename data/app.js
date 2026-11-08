@@ -718,7 +718,60 @@ at.read_environment(function(env) {
     print("Supply voltage:", env.voltage, "V");
     print("Modem temperature:", env.temperature, " C");
 });
-  }  
+  },
+
+  read_sms: function(cb) {
+    this.cmd('AT+CMGL="ALL"', function(data) {
+        var messages = [];
+        var current = null;
+
+        for (var i = 0; i < data.length; i++) {
+            var line = data[i];
+
+            var match = line.match(
+                /^\+CMGL:\s*(\d+),"([^"]+)","([^"]*)","([^"]*)","([^"]*)"$/
+            );
+
+            if (match) {
+                if (current)
+                    messages.push(current);
+
+                current = {
+                    index: parseInt(match[1], 10),
+                    status: match[2],
+                    number: match[3],
+                    name: match[4],
+                    date: match[5],
+                    body: ""
+                };
+            } else if (current && line != "OK" && line != "ERROR") {
+                if (current.body != "")
+                    current.body += "\n";
+
+                current.body += line;
+            }
+        }
+
+        if (current)
+            messages.push(current);
+
+        cb(messages);
+    });
+  },
+
+  print_sms: function() {
+    at.read_sms(function(messages) {
+    for (var i = 0; i < messages.length; i++) {
+        var sms = messages[i];
+
+        print("SMS index:", sms.index);
+        print("Status:", sms.status);
+        print("From:", sms.number);
+        print("Date:", sms.date);
+        print("Message:", sms.body);
+    }
+});
+  }
 };
 
 function __from_modem(flags, msg) {
