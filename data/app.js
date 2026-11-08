@@ -1,3 +1,4 @@
+/* -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil; -*- */
 /*
  * Interface to C
  */
