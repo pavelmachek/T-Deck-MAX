@@ -47,3 +47,4 @@ __set_hardware(0x200, 48);
 __set_hardware(0x201, 48);
 
 __set_hardware(0x300, 1);
+__write_at(0, "ATI");

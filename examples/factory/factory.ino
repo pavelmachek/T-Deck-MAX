@@ -1107,7 +1107,7 @@ bool A7682E_init(void)
     }
 
     phone_snapshot_reset(true);
-    if (xTaskCreate(a7682_task, "a7682_handle", 1024 * 4, NULL, A7682E_PRIORITY, &a7682_handle) != pdPASS) {
+    if (xTaskCreate(a7682_task, "a7682_handle", 1024 * 8, NULL, A7682E_PRIORITY, &a7682_handle) != pdPASS) {
         Serial.println("[A7682E] Runtime task init failed");
         a7682_handle = nullptr;
         A7682E_cleanup();
@@ -1329,8 +1329,7 @@ void setup()
     xl9555_io.digitalWrite(BOARD_XL9555_03_1V8_EN, HIGH);
     delay(10);
     peri_init_st[E_PERI_BHI260AP]   = BHI260AP_init();
-    peri_init_st[E_PERI_A7682E]     = false;
-    // A7682E_init();
+    peri_init_st[E_PERI_A7682E]     = A7682E_init();
 
     peri_init_st[E_PERI_TOUCH] = hyn_touch_init();
 

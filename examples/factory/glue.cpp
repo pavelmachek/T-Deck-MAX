@@ -182,7 +182,7 @@ static void js_register_globals(void)
     duk_push_c_function(ctx, js_set_hardware, 2);
     duk_put_global_string(ctx, "__set_hardware");
 
-    duk_push_c_function(ctx, js_write_at, 1);
+    duk_push_c_function(ctx, js_write_at, 2);
     duk_put_global_string(ctx, "__write_at");
     
     duk_push_int(ctx, sx);
