@@ -17,7 +17,9 @@
 
    let
    () => { ... }
-   
+
+   FIXME: We need some kind of locking, so that __step is not called
+   at the same time as __form_modem.
 */
 
 extern const char app_js_start[] asm("_binary_data_app_js_start");
