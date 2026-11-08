@@ -668,7 +668,57 @@ var at = {
         this.callback = cb;
         this.command = c;
         __write_at(0, c);
-    }
+    },
+
+  read_voltage: function(cb) {
+    this.cmd("AT+CBC", function(data) {
+        var voltage = null;
+
+        for (var i = 0; i < data.length; i++) {
+            var match = data[i].match(/\+CBC:\s*([\d.]+)V/i);
+            if (match) {
+                voltage = parseFloat(match[1]);
+                break;
+            }
+        }
+
+        cb(voltage);
+    });
+},
+
+read_temperature: function(cb) {
+    this.cmd("AT+CPMUTEMP", function(data) {
+        var temperature = null;
+
+        for (var i = 0; i < data.length; i++) {
+            var match = data[i].match(/\+CPMUTEMP:\s*(-?\d+)/i);
+            if (match) {
+                temperature = parseInt(match[1], 10);
+                break;
+            }
+        }
+
+        cb(temperature);
+    });
+},
+
+read_environment: function(cb) {
+    this.read_voltage(function(voltage) {
+        at.read_temperature(function(temperature) {
+            cb({
+                voltage: voltage,
+                temperature: temperature
+            });
+        });
+    });
+},
+
+  print_environment: function() { 
+at.read_environment(function(env) {
+    print("Supply voltage:", env.voltage, "V");
+    print("Modem temperature:", env.temperature, " C");
+});
+  }  
 };
 
 function __from_modem(flags, msg) {
