@@ -68,6 +68,11 @@ function __key(press, v) {
   return 0;
 }
 
+function __from_modem(flags, msg) {
+  /* flags: 1 unhandled, 0 all messages */
+  print("From modem ", flags, msg);
+}
+
 /*
  * Graphics tests / example; they should go to module somewhere
  */

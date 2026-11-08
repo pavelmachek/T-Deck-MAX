@@ -115,10 +115,28 @@ static duk_ret_t js_set_hardware(duk_context *ctx)
     case 0x0000: setCpuFrequencyMhz(val); return 0;
     case 0x0200: analogWrite(BOARD_KEYBOARD_LED, val); return 0; /* 0..255 */
     case 0x0201: analogWrite(BOARD_EPD_BL, val); return 0; /* 0..255 */
+    case 0x0300: if (val) A7682E_init(); return 0;
     }
     
     return duk_error(ctx, DUK_ERR_RANGE_ERROR,
 		     "unknown value in set_hardware");
+}
+
+static duk_ret_t js_write_at(duk_context *ctx)
+{
+    int reg = duk_require_int(ctx, 0);
+    const char *val = duk_require_string(ctx, 1);
+    int ret;
+
+    ret = phone_script_cmd(val);
+    /* Use val here, before returning. */
+
+    if (!ret) 
+      return 0;  /* No JavaScript return value */
+    else {
+      return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+		       "wrongness with at command FIXME");
+    }
 }
 
 
@@ -164,6 +182,9 @@ static void js_register_globals(void)
     duk_push_c_function(ctx, js_set_hardware, 2);
     duk_put_global_string(ctx, "__set_hardware");
 
+    duk_push_c_function(ctx, js_write_at, 1);
+    duk_put_global_string(ctx, "__write_at");
+    
     duk_push_int(ctx, sx);
     duk_put_global_string(ctx, "__screen_width");
 
@@ -206,6 +227,7 @@ int js_init(uint8_t *_screen, int _sx, int _sy)
     return 0;
 }
 
+/* This does a call with array of integers */
 static int js_call(const char *name, int nargs, int *args, int *result)
 {
     if (!ctx)
@@ -232,6 +254,41 @@ static int js_call(const char *name, int nargs, int *args, int *result)
     *result = duk_to_int(ctx, -1);
     duk_pop(ctx);
     return 0;
+}
+
+static int js_call_string(const char *name, int val, const char *arg, int *result)
+{
+    if (!ctx)
+        return -1;
+
+    duk_get_global_string(ctx, name);
+    if (!duk_is_function(ctx, -1)) {
+        duk_pop(ctx);
+        Serial.print("JavaScript function not found: ");
+        Serial.println(name);
+        return -1;
+    }
+
+    duk_push_int(ctx, val);
+    duk_push_string(ctx, arg);
+
+    if (duk_pcall(ctx, 2) != 0) {
+        Serial.print("JavaScript error: ");
+        Serial.println(duk_safe_to_string(ctx, -1));
+        duk_pop(ctx);
+        return -1;
+    }
+
+    *result = duk_to_int(ctx, -1);
+    duk_pop(ctx);
+    return 0;
+}
+
+int js_from_modem(int flags, const char *msg)
+{
+    int result;
+    js_call_string("__from_modem", flags, msg, &result);
+    return result;
 }
 
 static int __js_exec_input(void)

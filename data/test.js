@@ -45,3 +45,5 @@ __set_hardware(0x200, 0);
 __set_hardware(0x201, 0);
 __set_hardware(0x200, 48);
 __set_hardware(0x201, 48);
+
+__set_hardware(0x300, 1);

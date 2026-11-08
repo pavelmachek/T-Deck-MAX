@@ -22,6 +22,8 @@
 #include <freertos/queue.h>
 // #include "wav_hex.h"
 
+#include "glue.h"
+
 #ifndef FACTORY_RUNTIME_LOG
 #define FACTORY_RUNTIME_LOG 0
 #endif
@@ -55,6 +57,7 @@ typedef enum {
     PHONE_CMD_HANGUP,
     PHONE_CMD_TEST_DIGITS,
     PHONE_CMD_STATUS,
+    PHONE_CMD_SCRIPT,
     PHONE_CMD_DEBUG,
 } phone_cmd_type_t;
 
@@ -640,6 +643,23 @@ bool phone_runtime_play_test_digits(void)
     return true;
 }
 
+int phone_script_cmd(const char *at_cmd)
+{
+    if (phone_snapshot_state() != UI_PHONE_STATE_IDLE || phone_test_audio_active) {
+        return -1;
+    }
+
+    printf("modem: idle, ok, should queue command?\n");
+
+    phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Script");
+    if (!phone_queue_command(PHONE_CMD_SCRIPT, at_cmd, false)) {
+        phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Idle");
+	return -2;
+    }
+    return 0;
+
+}
+
 void phone_runtime_status(void)
 {
 printf("modem: status?\n");
@@ -810,6 +830,11 @@ static void phone_handle_command(const phone_cmd_t *cmd)
         phone_call_user_hangup = true;
         phone_send_command_line("AT+CHUP");
         break;
+    case PHONE_CMD_SCRIPT:
+        phone_send_command_line(cmd->number);
+        phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Script running");
+        break;
+	
     case PHONE_CMD_STATUS:
         phone_send_command_line("AT+CPSI?");
         phone_snapshot_set_state(UI_PHONE_STATE_IDLE, NULL, "Get status");
@@ -844,6 +869,7 @@ static void phone_handle_serial_line(const char *line)
     }
 
     printf("modem: %s\n", line);
+    js_from_modem(0, line);
 
     if (strcmp(line, "RING") == 0) {
         phone_begin_incoming_call(NULL);
@@ -915,6 +941,7 @@ static void phone_handle_serial_line(const char *line)
         return;
     }
 
+    js_from_modem(1, line);
     if (at_debug)
         phone_snapshot_add_history("Debug", "?", line);
 }
@@ -1051,9 +1078,8 @@ static void A7682E_cleanup(void)
     phone_snapshot_reset(false);
 }
 
-static bool A7682E_init(void)
+bool A7682E_init(void)
 {
-return false;
     Serial.println("Place your board outside to catch satelite signal");
     phone_snapshot_reset(false);
 
@@ -1303,7 +1329,8 @@ void setup()
     xl9555_io.digitalWrite(BOARD_XL9555_03_1V8_EN, HIGH);
     delay(10);
     peri_init_st[E_PERI_BHI260AP]   = BHI260AP_init();
-    peri_init_st[E_PERI_A7682E]     = A7682E_init();
+    peri_init_st[E_PERI_A7682E]     = false;
+    // A7682E_init();
 
     peri_init_st[E_PERI_TOUCH] = hyn_touch_init();
 
