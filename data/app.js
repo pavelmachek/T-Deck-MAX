@@ -70,6 +70,103 @@ function __key(press, v) {
 }
 
 /*
+ * Timers
+ */
+
+if (0) {
+
+var __timers = [];
+var __nextTimerId = 1;
+
+function __add_timer(callback, delay, repeating, args) {
+    var id = __nextTimerId++;
+
+    delay = Math.max(0, Number(delay) || 0);
+
+    __timers.push({
+        id: id,
+        callback: callback,
+        args: args,
+        delay: delay,
+        repeating: repeating,
+        nextRun: Date.now() + delay,
+        active: true
+    });
+
+    return id;
+}
+
+function setTimeout(callback, delay) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return __add_timer(callback, delay, false, args);
+}
+
+function setInterval(callback, delay) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return __add_timer(callback, delay, true, args);
+}
+
+function clearTimeout(id) {
+    for (var i = 0; i < __timers.length; i++) {
+        if (__timers[i].id === id) {
+            __timers[i].active = false;
+            break;
+        }
+    }
+}
+
+function clearInterval(id) {
+    clearTimeout(id);
+}
+
+function __run_timers() {
+    var now = Date.now();
+    var dueTimers = [];
+    var i, timer;
+
+    // Snapshot due timers.
+    for (i = 0; i < __timers.length; i++) {
+        timer = __timers[i];
+
+        if (timer.active && now >= timer.nextRun) {
+            dueTimers.push(timer);
+        }
+    }
+
+    // Execute callbacks.
+    for (i = 0; i < dueTimers.length; i++) {
+        timer = dueTimers[i];
+
+        if (!timer.active) {
+            continue;
+        }
+
+        if (timer.repeating) {
+            timer.nextRun = Date.now() + timer.delay;
+        } else {
+            timer.active = false;
+        }
+
+        try {
+            timer.callback.apply(null, timer.args);
+        } catch (error) {
+            if (typeof console !== "undefined") {
+                console.error("Timer callback error:", error);
+            }
+        }
+    }
+
+    // Cleanup inactive timers.
+    for (i = __timers.length - 1; i >= 0; i--) {
+        if (!__timers[i].active) {
+            __timers.splice(i, 1);
+        }
+    }
+}
+
+}
+
+/*
  * Graphics tests / example; they should go to module somewhere
  */
 
@@ -1213,6 +1310,8 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
     var top = y - height / 2;
     var bottom = y + height / 2;
 
+    print("Drawwatch: ink");
+
     ink.setColor();
 
     // Hour
@@ -1296,9 +1395,14 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
         g.drawLine(x, top, x, bottom);
         g.fillCircle(x, y, circleSize);
     }
+
+    print("Drawwatch: min");
     
     drawMinutes(mx1, my1, mx2, my2, minute);
 
+    print("Drawwatch: ind1");
+
+    if (0) {
     // Signal indicator
     drawIndicator(
         left - 12,
@@ -1310,6 +1414,10 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
         right + 12,
         battery
     );
+    }
+
+    print("Drawwatch: all ok");
+    
 }
 
 var watch = {

@@ -55,3 +55,11 @@ at.cmd('AT+CCMXPLAY="Ding-01.wav",0,0', print);
 print("ABC".startsWith("AB"))
 
 
+drawEnvelope(0, 0, 100, false); now();
+drawHandset(100, 0, 100); now();
+drawWatch(100, 200, 100, new Date(), 30, 30); now();
+
+watch.draw(); now();
+watch.newSms(); now();
+watch.newCall(); now();
+
