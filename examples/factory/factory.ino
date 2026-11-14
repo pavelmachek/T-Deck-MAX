@@ -28,6 +28,8 @@
 #define FACTORY_RUNTIME_LOG 0
 #endif
 
+SET_LOOP_TASK_STACK_SIZE(16 * 1024);
+
 #define FACTORY_BATTERY_DESIGN_CAPACITY_MAH 1400
 
 TinyGsm modem(SerialAT);
@@ -1350,6 +1352,8 @@ uint32_t tick = 0;
 
 void loop()
 {
+    //Serial.printf("Free stack: %u bytes\n", uxTaskGetStackHighWaterMark(NULL));
+		  
     lv_task_handler();
     keypad_loop();
 
