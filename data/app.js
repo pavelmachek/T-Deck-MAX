@@ -661,6 +661,10 @@ var ink = {
         g.setBgColor(1-this.color, 1-this.color, 1-this.color);
         g.setColor(this.color, this.color, this.color);
     },
+    /* Careful -- with this, you can easily break the "only draw once" assumption */
+    setBgColor: function () {
+        g.setColor(1-this.color, 1-this.color, 1-this.color);
+    },    
     cls: function () {
         g.fillRect(0, 0, g.getWidth(), g.getHeight());
         this.color = 1-this.color;
@@ -800,7 +804,7 @@ var at = {
   on_ussd: function(msg) {
     print("Ussd:", msg);
       this.sms_notify();
-      watch.newUSS();
+      watch.newUSSD();
   },
 
     cmd: function(c, cb) {
@@ -1279,12 +1283,12 @@ function drawEnvelope(x, y, size, ussd) {
         var r = Math.max(5, Math.round(size * 0.22));
 
         g.fillCircle(bx, by, r);
-        g.setColor(g.theme.bg);
+        ink.setBgColor();
         g.drawLine(bx - 2, by - 3, bx - 1, by + 3);
         g.drawLine(bx + 2, by - 3, bx + 3, by + 3);
         g.drawLine(bx - 4, by - 1, bx + 4, by - 1);
         g.drawLine(bx - 4, by + 2, bx + 4, by + 2);
-        g.setColor(g.theme.fg);
+        ink.setBgColor();
     }
 }
 
@@ -1502,6 +1506,13 @@ var watch = {
     newCall: function() {
         this.jump(1, 1);
         drawHandset(this.base_x, this.base_y, this.size);
+        this.jump(1, 1);
+    },
+
+    newMsg: function(msg) {
+        this.jump(1, 1);
+        g.setFont("Vector", 22);
+        g.drawString(msg, this.base_x, this.base_y);
         this.jump(1, 1);
     },
 

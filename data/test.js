@@ -71,6 +71,7 @@ print(__timers);
 __run_timers(); now();
 
 at.ussd("*104*#", at.print);
+at.cmd("AT+CPSI?", at.print);
 
 /*
   PC:  0x42007c45  PS      : 0x00060e30  A0      : 0x82007fa2  A1      : 0x3fced 

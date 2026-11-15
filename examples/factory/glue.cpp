@@ -316,7 +316,7 @@ static int js_call_string(const char *name, int val, const char *arg, int *resul
 void js_too_long(uint64_t start_us, char *msg)
 {
     uint64_t stop_us = esp_timer_get_time();
-    if (stop_us - start_us > 0)
+    if (stop_us - start_us > 5000)
         printf("js: too long: %s, %ld usec\n", msg, (long) stop_us - start_us);
 }
 
