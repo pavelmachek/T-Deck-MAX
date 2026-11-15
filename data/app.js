@@ -739,7 +739,7 @@ var at = {
     callback: null,
     data: [],
     command: "NEVER",
-    last_ok: null,
+    last_ok: 0,
     last_status: {},
     last_details: {},
     
@@ -770,7 +770,7 @@ parse_status: function(msg) {
 
     if (status.operation === "Online") {
         status.available = true;
-        this.last_ok = new Date();
+        this.last_ok = Date.now() / 1000;
     }
 
     // Parse MCC-MNC
@@ -832,12 +832,20 @@ parse_status: function(msg) {
     return status;
 },
 
+    period: 60000, /* msec */
     periodic: function() {
+        var now = Date.now() / 1000;
+        if ((now - this.last_ok) > at.period * 1.2)
+            watch.newMsg("!gone!");
         this.cmd("AT+CPSI?", at.periodic_2);
     },
 
     periodic_2: function() {
-        print("Should go to sleep?");
+        this.cmd("AT+CSCLK=2", at.periodic_3);
+    },
+
+    periodic_3: function() {
+        print("Sleep cpu now?\n");
     },
     
     from_modem: function(flags, msg) {
@@ -865,12 +873,12 @@ parse_status: function(msg) {
       // Volani naplno - neomezene volani v CR na 240..."
       //
 
-      if (msg.startsWith("+CMTI")) {
+      if (msg.startsWith("+CMT:")) {
         this.on_sms();
         return;
       }
 
-      if (msg.startsWith("+CUSD")) {
+      if (msg.startsWith("+CUSD:")) {
         // FIXME: parse ussd
         this.on_ussd(msg.slice(10));
         return;
@@ -1613,6 +1621,7 @@ var watch = {
     newMsg: function(msg) {
         this.jump(1, 1);
         g.setFont("Vector", 22);
+        g.setFontAlign(-1, -1);
         g.drawString(msg, this.base_x, this.base_y);
         this.jump(1, 1);
     },
@@ -1667,7 +1676,8 @@ function at_periodic() {
     at.periodic();
 }
 
-var at_timer = setInterval(at_periodic, 60000);
+at_periodic();
+var at_timer = setInterval(at_periodic, at.period);
 
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git

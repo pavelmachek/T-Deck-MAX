@@ -92,3 +92,5 @@ Backtrace: 0x42007c42:0x3fceda90 0x42007f9f:0x3fcedb10 0x42044a5c:0x3fcedc40
 AT+CUSD=1,"*104*#",15
 
 */
+
+print(Date.now() / 1000);
