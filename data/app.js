@@ -665,7 +665,8 @@ var ink = {
         g.fillRect(0, 0, g.getWidth(), g.getHeight());
         this.color = 1-this.color;
         this.setColor();
-    }
+    },
+    now: function () { __redraw = 1; }
 };
 
 /*
@@ -1301,8 +1302,6 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
     var top = y - height / 2;
     var bottom = y + height / 2;
 
-    print("Drawwatch: ink");
-
     ink.setColor();
 
     // Hour
@@ -1387,11 +1386,7 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
         g.fillCircle(x, y, circleSize);
     }
 
-    print("Drawwatch: min");
-    
     drawMinutes(mx1, my1, mx2, my2, minute);
-
-    print("Drawwatch: ind1");
 
     if (0) {
     // Signal indicator
@@ -1408,7 +1403,6 @@ function drawWatch(x, y, width, now, signalLevel, battery) {
     }
 
     print("Drawwatch: all ok");
-    
 }
 
 var watch = {
@@ -1493,7 +1487,7 @@ var watch = {
             self.battery = E.getBattery();
             self.signal = -50;
             self.draw();
-        }, 1000);
+        }, 60000);
     },
 
     draw: function() {
@@ -1508,6 +1502,7 @@ var watch = {
         this.last_hour = hour;
 
         drawWatch(this.x, this.y, this.width, now, this.signalLevel(), this.battery);
+        ink.now();
     },
 
     // Convert RSSI to percentage
@@ -1525,7 +1520,7 @@ var watch = {
 g.reset();
 
 // Start
-//watch.init();
+watch.init();
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  
