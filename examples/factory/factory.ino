@@ -952,7 +952,7 @@ static void a7682_task(void *param)
 {
     (void)param;
 
-    char line_buf[128] = {0};
+    static char line_buf[1024] = {0};
     size_t line_len = 0;
     uint32_t last_clcc_ms = 0;
 
@@ -995,6 +995,7 @@ static void a7682_task(void *param)
             if (line_len < (sizeof(line_buf) - 1U)) {
                 line_buf[line_len++] = ch;
             } else {
+	    printf("Modem line too long, ignoring characters\n");
                 line_len = 0;
             }
         }

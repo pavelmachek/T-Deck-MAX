@@ -3510,7 +3510,9 @@ static void js_timer_cb(lv_timer_t *t)
 
     int r = js_step();
     if (js_label && r == 1) {
+      uint64_t start_us = esp_timer_get_time();
       set_img(js_label);
+      js_too_long(start_us, "set_img");
     }
 
     char key = '\0';
