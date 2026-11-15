@@ -821,11 +821,14 @@ parse_status: function(msg) {
     }
 
     print(status, details);
-    if (this.last_status != status) {
-        var msg = status.operation + "," + status.mode + "," + status.mcc + status.mnc;
-        print("Status changed: ", msg);
-        watch.newMsg(msg);
-    }
+    //        var msg = status.operation + "," + status.mode + "," + status.mcc + status.mnc;
+    if (this.last_status.operation != status.operation)
+        watch.newMsg(status.operation);
+    if (this.last_status.mode != status.mode)
+        watch.newMsg(status.mode);
+    if (this.last_status.mcc+this.last_status.mnc != status.mcc+status.mnc)
+        watch.newMsg(status.mcc+" "+status.mnc);
+
     this.last_status = status;
     this.last_details = details;
     
@@ -1672,8 +1675,8 @@ watch.init();
 
 function at_periodic() {
     print("at periodic");
-    watch.draw();
     at.periodic();
+    watch.draw(); // FIXME: We want to do it periodically, and we want it after modem cycle ends
 }
 
 at_periodic();

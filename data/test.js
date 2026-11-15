@@ -94,3 +94,5 @@ AT+CUSD=1,"*104*#",15
 */
 
 print(Date.now() / 1000);
+
+AT+CSCLK=2
