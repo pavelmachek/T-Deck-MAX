@@ -737,6 +737,11 @@ var at = {
     command: "NEVER",
 
     from_modem: function(flags, msg) {
+      if (msg.startsWith("RING")) {
+        this.on_call();
+        return;
+      }
+        
         /* flags: 1 unhandled, 0 all messages */
         if (flags != 1)
             return;
@@ -775,13 +780,20 @@ var at = {
         }
     },
 
+    on_call: function() {
+        /* Modem does ringtone on its own */
+      watch.newCall();
+  },
+
   on_sms: function() {
-    this.sms_notify();
+      this.sms_notify();
+      watch.newSms();
   },
 
   on_ussd: function(msg) {
     print("Ussd:", msg);
-    this.sms_notify();
+      this.sms_notify();
+      watch.newUSS();
   },
 
     cmd: function(c, cb) {
@@ -950,6 +962,7 @@ function __from_modem(flags, msg) {
 //AT+CPSI -- gives useful status, but already handled by core, so not suitable
 
 // at.ussd("*104*#", at.print);
+// at.ussd("*104*", at.print);
 
 /*
   misc hw
@@ -1474,6 +1487,12 @@ var watch = {
         this.jump(1, 1);
     },
 
+    newUSSD: function() {
+        this.jump(1, 1);
+        drawEnvelope(this.base_x, this.base_y, this.size, true);
+        this.jump(1, 1);
+    },
+    
     newCall: function() {
         this.jump(1, 1);
         drawHandset(this.base_x, this.base_y, this.size);
