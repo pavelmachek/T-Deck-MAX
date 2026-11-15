@@ -41,14 +41,7 @@ function __fill_rect(x1, y1, x2, y2, color) {
 var __redraw = 0;
 var __last_t = -1;
 function __step(i) {
-  if (0) {
-    // FIXME
-  var t = Date.now();
-  if (__last_t != t) {
-    __last_t = t;
-    drawClock();
-  }
-  }
+  __run_timers();
   if (__redraw > 0) {
     __redraw = 0;
     return 1;

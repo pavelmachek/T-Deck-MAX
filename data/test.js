@@ -68,3 +68,5 @@ setTimeout(sayDate, 10000);
 
 print(__timers);
 
+__run_timers(); now();
+
