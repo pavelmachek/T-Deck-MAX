@@ -27,6 +27,8 @@
 extern const char app_js_start[] asm("_binary_data_app_js_start");
 extern const char app_js_end[]   asm("_binary_data_app_js_end");
 
+SemaphoreHandle_t js_lock;
+
 size_t js_size = app_js_end - app_js_start;
 
 static duk_context *ctx;
@@ -214,6 +216,8 @@ int js_init(uint8_t *_screen, int _sx, int _sy)
     if (!_screen || _sx <= 0 || _sy <= 0)
         return -1;
 
+    js_lock = xSemaphoreCreateMutex();
+
     screen = _screen;
     sx = _sx;
     sy = _sy;
@@ -237,11 +241,17 @@ static int js_call(const char *name, int nargs, int *args, int *result)
     if (!ctx)
         return -1;
 
+    if (xSemaphoreTake(js_lock, pdMS_TO_TICKS(5000)) != pdTRUE) {
+        printf("Could not get javascript lock.\n");
+        return -1;
+    }
+
     duk_get_global_string(ctx, name);
     if (!duk_is_function(ctx, -1)) {
         duk_pop(ctx);
         Serial.print("JavaScript function not found: ");
         Serial.println(name);
+        xSemaphoreGive(js_lock);
         return -1;
     }
 
@@ -252,11 +262,13 @@ static int js_call(const char *name, int nargs, int *args, int *result)
         Serial.print("JavaScript error: ");
         Serial.println(duk_safe_to_string(ctx, -1));
         duk_pop(ctx);
+        xSemaphoreGive(js_lock);
         return -1;
     }
 
     *result = duk_to_int(ctx, -1);
     duk_pop(ctx);
+    xSemaphoreGive(js_lock);
     return 0;
 }
 
@@ -264,12 +276,17 @@ static int js_call_string(const char *name, int val, const char *arg, int *resul
 {
     if (!ctx)
         return -1;
+    if (xSemaphoreTake(js_lock, pdMS_TO_TICKS(5000)) != pdTRUE) {
+        printf("Could not get javascript lock.\n");
+        return -1;
+    }
 
     duk_get_global_string(ctx, name);
     if (!duk_is_function(ctx, -1)) {
         duk_pop(ctx);
         Serial.print("JavaScript function not found: ");
         Serial.println(name);
+    xSemaphoreGive(js_lock);
         return -1;
     }
 
@@ -280,11 +297,13 @@ static int js_call_string(const char *name, int val, const char *arg, int *resul
         Serial.print("JavaScript error: ");
         Serial.println(duk_safe_to_string(ctx, -1));
         duk_pop(ctx);
+    xSemaphoreGive(js_lock);
         return -1;
     }
 
     *result = duk_to_int(ctx, -1);
     duk_pop(ctx);
+    xSemaphoreGive(js_lock);
     return 0;
 }
 
@@ -297,12 +316,18 @@ int js_from_modem(int flags, const char *msg)
 
 static int __js_exec_input(void)
 {
+    if (xSemaphoreTake(js_lock, pdMS_TO_TICKS(5000)) != pdTRUE) {
+        printf("Could not get javascript lock.\n");
+        return -1;
+    }
+
     input[input_pos] = '\0';
-    Serial.printf("\n# exec, %u chars\n", (unsigned)input_pos);
+    printf("\n# exec, %u chars\n", (unsigned)input_pos);
 
     int rc = js_eval(input);
     if (rc == 0)
-        Serial.println("# done");
+        printf("# done\n");
+    xSemaphoreGive(js_lock);
 
     return rc;
 }
