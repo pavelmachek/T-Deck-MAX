@@ -736,17 +736,24 @@ var at = {
     data: [],
     command: "NEVER",
 
+    sanitize: function(str) {
+        return str.replace(/[^\x20-\x7E]/g, "_");
+    },
+
     from_modem: function(flags, msg) {
+        msg = this.sanitize(msg);
+        
       if (msg.startsWith("RING")) {
         this.on_call();
         return;
       }
+
+        print("js modem: ", flags, this.state, msg);
         
         /* flags: 1 unhandled, 0 all messages */
         if (flags != 1)
             return;
 
-      print("From modem ", flags, this.state, msg);
 
       // +CMTI: "SM",1
       // +CUSD: 1,"KREDIT: 50 Kc, platny do 26.11.2026
@@ -962,7 +969,6 @@ function __from_modem(flags, msg) {
 //AT+CPSI -- gives useful status, but already handled by core, so not suitable
 
 // at.ussd("*104*#", at.print);
-// at.ussd("*104*", at.print);
 
 /*
   misc hw
