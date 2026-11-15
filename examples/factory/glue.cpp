@@ -6,6 +6,7 @@
 
 #include <duktape.h>
 #include <Arduino.h>
+#include <esp_timer.h>
 
 #include "utilities.h"
 #include "factory.h"
@@ -198,7 +199,7 @@ static void js_register_globals(void)
     duk_put_global_string(ctx, "__screen_height");
 }
 
-static int js_eval(const char *code)
+static int __js_eval(const char *code)
 {
     if (duk_peval_string(ctx, code) != 0) {
         Serial.print("JavaScript error: ");
@@ -217,7 +218,11 @@ int js_init(uint8_t *_screen, int _sx, int _sy)
         return -1;
 
     js_lock = xSemaphoreCreateMutex();
-
+    if (xSemaphoreTake(js_lock, pdMS_TO_TICKS(5000)) != pdTRUE) {
+        printf("Could not get javascript lock.\n");
+        return -1;
+    }
+    
     screen = _screen;
     sx = _sx;
     sy = _sy;
@@ -228,10 +233,11 @@ int js_init(uint8_t *_screen, int _sx, int _sy)
 
     js_register_globals();
 
-    if (js_eval(app_js_start) != 0)
+    if (__js_eval(app_js_start) != 0)
         return -1;
 
-    js_eval("print('js: Scripting initialized.');");
+    __js_eval("print('js: Scripting initialized.');");
+    xSemaphoreGive(js_lock);
     return 0;
 }
 
@@ -307,14 +313,23 @@ static int js_call_string(const char *name, int val, const char *arg, int *resul
     return 0;
 }
 
+static void js_too_long(uint64_t start_us, char *msg)
+{
+    uint64_t stop_us = esp_timer_get_time();
+    if (stop_us - start_us > 1000)
+        printf("js: too long: %s, %ld usec\n", msg, (long) stop_us - start_us);
+}
+
 int js_from_modem(int flags, const char *msg)
 {
     int result;
+    uint64_t start_us = esp_timer_get_time();
     js_call_string("__from_modem", flags, msg, &result);
+    js_too_long(start_us, "js_from_modem");
     return result;
 }
 
-static int __js_exec_input(void)
+static int js_exec_input(void)
 {
     if (xSemaphoreTake(js_lock, pdMS_TO_TICKS(5000)) != pdTRUE) {
         printf("Could not get javascript lock.\n");
@@ -324,17 +339,12 @@ static int __js_exec_input(void)
     input[input_pos] = '\0';
     printf("\n# exec, %u chars\n", (unsigned)input_pos);
 
-    int rc = js_eval(input);
+    int rc = __js_eval(input);
     if (rc == 0)
         printf("# done\n");
     xSemaphoreGive(js_lock);
 
     return rc;
-}
-
-int js_exec_input(void)
-{
-    return __js_exec_input();
 }
 
 /* Returns 1 if the screen should be redrawn. */
@@ -343,14 +353,17 @@ int js_step(void)
     if (!ctx)
         return -1;
 
+    /* FIXME: this is not compatible with AT passthrough mode */
     while (Serial.available()) {
         int c = Serial.read();
 
         if (c == 2) { /* Ctrl-B executes the accumulated input. */
+            uint64_t start_us = esp_timer_get_time();
             if (input_pos < sizeof(input))
-                __js_exec_input();
+                js_exec_input();
             else
                 Serial.println("Input buffer full");
+            js_too_long(start_us, "js_step: user input");
 
             input_pos = 0;
             continue;
@@ -368,9 +381,10 @@ int js_step(void)
 
     int args[] = { 666 };
     int result = 0;
-
+    uint64_t start_us = esp_timer_get_time();
     if (js_call("__step", 1, args, &result) != 0)
         return -1;
+    js_too_long(start_us, "js_step: __step");
 
     return result;
 }

@@ -4353,7 +4353,7 @@ void ui_deckpro_entry(void)
     phone_state_timer = lv_timer_create(phone_state_timer_cb, 30, NULL);
     lv_timer_ready(phone_state_timer);
 
-    js_timer = lv_timer_create(js_timer_cb, 30, NULL);
+    js_timer = lv_timer_create(js_timer_cb, 1000, NULL);
     lv_timer_ready(js_timer);
     
     scr_mgr_init();

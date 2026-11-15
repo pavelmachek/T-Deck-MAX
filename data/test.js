@@ -70,3 +70,19 @@ print(__timers);
 
 __run_timers(); now();
 
+at.ussd("*104*#", at.print);
+
+/*
+  PC:  0x42007c45  PS      : 0x00060e30  A0      : 0x82007fa2  A1      : 0x3fced 
+A2      : 0x3fcedb14  A3      : 0x3fcbe510  A4      : 0x00000001  A5      : 0x00000 
+A6      : 0x3fcb6c24  A7      : 0x3fcb120c  A8      : 0x82007c45  A9      : 0x3fced 
+A10     : 0x00000000  A11     : 0x3fcedb38  A12     : 0x00000000  A13     : 0x00000 
+A14     : 0x3fc9fd68  A15     : 0x3fc9fd70  SAR     : 0x0000000a  EXCCAUSE: 0x00000 
+EXCVADDR: 0x00000000  LBEG    : 0x400554b9  LEND    : 0x400554dd  LCOUNT  : 0x82006 
+
+
+Backtrace: 0x42007c42:0x3fceda90 0x42007f9f:0x3fcedb10 0x42044a5c:0x3fcedc40
+
+AT+CUSD=1,"*104*#",15
+
+*/
