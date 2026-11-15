@@ -1534,7 +1534,7 @@ var watch = {
 g.reset();
 
 // Start
-watch.init();
+//watch.init();
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  
