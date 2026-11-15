@@ -73,6 +73,11 @@ __run_timers(); now();
 at.ussd("*104*#", at.print);
 at.cmd("AT+CPSI?", at.print);
 
+at.cmd("AT+CPSI?", at.periodic_2);
+at.print(at.last_status.mode);
+at.print(at.last_status.operation);
+at.print(at.last_status.available);
+
 /*
   PC:  0x42007c45  PS      : 0x00060e30  A0      : 0x82007fa2  A1      : 0x3fced 
 A2      : 0x3fcedb14  A3      : 0x3fcbe510  A4      : 0x00000001  A5      : 0x00000 

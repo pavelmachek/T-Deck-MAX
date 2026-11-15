@@ -739,20 +739,121 @@ var at = {
     callback: null,
     data: [],
     command: "NEVER",
-
+    last_ok: null,
+    last_status: {},
+    last_details: {},
+    
     sanitize: function(str) {
         return str.replace(/[^\x20-\x7E]/g, "_");
     },
 
+    
+parse_status: function(msg) {
+    if (!msg.startsWith("+CPSI:")) {
+        return null;
+    }
+
+    const fields = msg.substring(6).trim().split(",");
+
+    const status = {
+        mode: fields[0],
+        operation: fields[1]
+    };
+
+    const details = {};
+
+    status.available = false;
+    
+    if (status.mode === "NO SERVICE") {
+        return status;
+    }
+
+    if (status.operation === "Online") {
+        status.available = true;
+        this.last_ok = new Date();
+    }
+
+    // Parse MCC-MNC
+    const plmn = (fields[2] || "").split("-");
+
+    status.mcc = plmn[0] || null;
+    status.mnc = plmn[1] || null;
+
+    if (status.mode === "LTE") {
+        Object.assign(details, {
+            lac: fields[3],
+            cell_id: fields[4],
+            physical_cell_id: fields[5],
+            band: fields[6],
+            earfcn: fields[7],
+            downlink_bandwidth: fields[8],
+            uplink_bandwidth: fields[9],
+            rsrq: fields[10],
+            rsrp: fields[11],
+            rssi: fields[12],
+            rssnr: fields[13]
+        });
+    }
+    else if (status.mode === "GSM") {
+        Object.assign(details, {
+            lac: fields[3],
+            cell_id: fields[4],
+            arfcn: fields[5],
+            rxlev: fields[6],
+            track_lo_adjust: fields[7],
+            c1_c2: fields[8]
+        });
+    }
+    else if (status.mode === "WCDMA") {
+        Object.assign(details, {
+            lac: fields[3],
+            cell_id: fields[4],
+            band: fields[5],
+            psc: fields[6],
+            frequency: fields[7],
+            ssc: fields[8],
+            ecio: fields[9],
+            rscp: fields[10],
+            quality: fields[11],
+            rxlev: fields[12],
+            txpwr: fields[13]
+        });
+    }
+
+    print(status, details);
+    if (this.last_status != status) {
+        var msg = status.operation + "," + status.mode + "," + status.mcc + status.mnc;
+        print("Status changed: ", msg);
+        watch.newMsg(msg);
+    }
+    this.last_status = status;
+    this.last_details = details;
+    
+    return status;
+},
+
+    periodic: function() {
+        this.cmd("AT+CPSI?", at.periodic_2);
+    },
+
+    periodic_2: function() {
+        print("Should go to sleep?");
+    },
+    
     from_modem: function(flags, msg) {
         msg = this.sanitize(msg);
+        print("js modem: ", flags, this.state, msg);
         
       if (msg.startsWith("RING")) {
         this.on_call();
         return;
       }
 
-        print("js modem: ", flags, this.state, msg);
+      if (msg.startsWith("+CPSI")) {
+          this.parse_status(msg);
+          return;
+      }
+        
         
         /* flags: 1 unhandled, 0 all messages */
         if (flags != 1)
@@ -1516,7 +1617,9 @@ var watch = {
         this.jump(1, 1);
     },
 
-    init: function() {
+    init: function() {},
+    
+    init_periodic: function() {
         var self = this;
 
         this.timer = setInterval(function() {
@@ -1557,6 +1660,15 @@ g.reset();
 
 // Start
 watch.init();
+
+function at_periodic() {
+    print("at periodic");
+    watch.draw();
+    at.periodic();
+}
+
+var at_timer = setInterval(at_periodic, 60000);
+
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  
