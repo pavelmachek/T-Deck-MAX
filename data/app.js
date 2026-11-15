@@ -3,6 +3,8 @@
  * Interface to C
  */
 
+print("js: Starting init");
+
 function __draw_hline(x1, x2, y, color) {
   var temp;
 
@@ -72,8 +74,6 @@ function __key(press, v) {
 /*
  * Timers
  */
-
-if (0) {
 
 var __timers = [];
 var __nextTimerId = 1;
@@ -162,8 +162,6 @@ function __run_timers() {
             __timers.splice(i, 1);
         }
     }
-}
-
 }
 
 /*
@@ -1019,7 +1017,7 @@ hw.battery.print_all = function() {
     return result;
 };
 
-print(hw.battery.print_all());
+//print(hw.battery.print_all()); this prints extra "object object"
 
 /*
  * Example application: time display

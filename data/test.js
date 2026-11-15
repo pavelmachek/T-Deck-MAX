@@ -63,3 +63,8 @@ watch.draw(); now();
 watch.newSms(); now();
 watch.newCall(); now();
 
+function sayDate() { print("Date: ", new Date()); }
+setTimeout(sayDate, 10000);
+
+print(__timers);
+
