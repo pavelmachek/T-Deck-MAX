@@ -1,4 +1,7 @@
 /* -*- mode: js; js-indent-level: 4; indent-tabs-mode: nil; -*- */
+
+/* Warning; this is ES5 javascript. You can't do let, don't use => () functions. It looks like this. has problems, too, at least inside of callbacks */
+   
 /*
  * Interface to C
  */
@@ -840,15 +843,23 @@ parse_status: function(msg) {
         var now = Date.now();
         if ((now - this.last_ok) > at.period * 1.2)
             watch.newMsg("!gone!");
-        this.cmd("AT+CPSI?", at.periodic_2);
+        print("p0: Wake modem?");
+        __write_at(0, "\n"); /* Wake modem from powersave if any */
+        setTimeout(at.periodic_1, 10000);
+    },
+    
+    periodic_1: function() {
+        print("p1: Status?");
+        at.cmd("AT+CPSI?", at.periodic_2);
     },
 
     periodic_2: function() {
-        this.cmd("AT+CSCLK=2", at.periodic_3);
+        print("p2: Back to powersave?");
+        at.cmd("AT+CSCLK=2", at.periodic_3);
     },
 
     periodic_3: function() {
-        print("Sleep cpu now?\n");
+        print("P3: enter powersave?\n");
     },
     
     from_modem: function(flags, msg) {

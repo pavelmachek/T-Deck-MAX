@@ -106,3 +106,10 @@ at.cmd("AT+CNMP=38", print);
 at.cmd("ATI", print);
 at.cmd("AT+CLAC", print);
 at.cmd("AT+CLAC=?", print);
+
+at.periodic_1()
+
+__write_at(0, "ATI");
+
+at_periodic();
+at.sms_notify();
