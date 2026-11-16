@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "ui_deckpro_port.h"
+
 /*
    This version of javascript does not seem to understand:
 
@@ -169,6 +171,18 @@ static duk_ret_t js_cprint(duk_context *ctx)
     return 0;
 }
 
+static duk_ret_t js_enter_sleep(duk_context *ctx)
+{
+    int reg = duk_require_int(ctx, 0);
+    int val = duk_require_int(ctx, 1);
+
+    if (!hw_system_sleep(reg, val))
+        return 0;
+    
+    return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+		     "error in enter_sleep");
+}
+
 static void js_register_globals(void)
 {
     duk_push_c_function(ctx, js_print, DUK_VARARGS);
@@ -191,6 +205,9 @@ static void js_register_globals(void)
 
     duk_push_c_function(ctx, js_write_at, 2);
     duk_put_global_string(ctx, "__write_at");
+
+    duk_push_c_function(ctx, js_enter_sleep, 2);
+    duk_put_global_string(ctx, "__enter_sleep");
     
     duk_push_int(ctx, sx);
     duk_put_global_string(ctx, "__screen_width");

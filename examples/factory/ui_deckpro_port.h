@@ -196,6 +196,7 @@ void ui_motor_stop(void);
 
 //
 void ui_system_sleep(void);
+int hw_system_sleep(int msec, int flags);
 
 #ifdef __cplusplus
 } /*extern "C"*/

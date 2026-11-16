@@ -874,14 +874,29 @@ void ui_system_sleep_deep(void)
     //esp_light_sleep_start();
 }
 
+int hw_system_sleep(int msec, int flags)
+{
+    unsigned long wakeup = (1UL << BOARD_BOOT_PIN);
+    if (flags & 1) {
+      wakeup |= (1UL << BOARD_TOUCH_INT);
+    }
+    if (flags & 2) {
+      wakeup |= (1UL << BOARD_A7682E_RI);
+    }
+    
+    // Can't get KEYBOARD_INT to work. Touch works.
+    esp_sleep_enable_ext1_wakeup(wakeup, ESP_EXT1_WAKEUP_ANY_LOW);
+    // Wake up every minute; works, but we want to test power
+    if (msec)
+      esp_sleep_enable_timer_wakeup(1ULL * 1000 * msec); 
+    esp_light_sleep_start();
+    return 0;
+}
+
 void ui_system_sleep(void)
 {
     disp_sleep(".oO Light sleep");
     Serial.print("Entering light sleep");
-    // Can't get KEYBOARD_INT to work. Touch works.
-    esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN) | (1UL << BOARD_TOUCH_INT) | (1UL << BOARD_A7682E_RI), ESP_EXT1_WAKEUP_ANY_LOW);
-    // Wake up every minute; works, but we want to test power
-    // esp_sleep_enable_timer_wakeup(1ULL * 60 * 1000000); 
-    esp_light_sleep_start();
+    hw_system_sleep(0, 3);
     Serial.print("Exited light sleep");
 }
