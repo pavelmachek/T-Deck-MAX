@@ -41,6 +41,8 @@ print("full capacity", __get_hardware(0x108));
 print("state of health", __get_hardware(0x109));
 print("charging finished", __get_hardware(0x10a));
 
+print("boot pin", __get_hardware(0x202));
+
 __set_hardware(0x200, 0);
 __set_hardware(0x201, 0);
 __set_hardware(0x200, 48);
@@ -115,3 +117,4 @@ at_periodic();
 at.sms_notify();
 
 __enter_sleep(1000, 3);
+

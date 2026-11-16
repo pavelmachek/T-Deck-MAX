@@ -106,6 +106,8 @@ static duk_ret_t js_get_hardware(duk_context *ctx)
     case 0x0108: val = bq27220.getFullChargeCapacity(); break;
     case 0x0109: val = bq27220.getStateOfHealth(); break;
     case 0x010a: val = bq27220.getCharingFinish(); break;
+
+    case 0x0202: val = digitalRead(BOARD_BOOT_PIN); break;
       
     default:
         return duk_error(ctx, DUK_ERR_RANGE_ERROR,
