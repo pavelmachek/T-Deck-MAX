@@ -770,7 +770,7 @@ parse_status: function(msg) {
 
     if (status.operation === "Online") {
         status.available = true;
-        this.last_ok = Date.now() / 1000;
+        this.last_ok = Date.now();
     }
 
     // Parse MCC-MNC
@@ -837,7 +837,7 @@ parse_status: function(msg) {
 
     period: 60000, /* msec */
     periodic: function() {
-        var now = Date.now() / 1000;
+        var now = Date.now();
         if ((now - this.last_ok) > at.period * 1.2)
             watch.newMsg("!gone!");
         this.cmd("AT+CPSI?", at.periodic_2);

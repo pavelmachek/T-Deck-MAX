@@ -96,3 +96,13 @@ AT+CUSD=1,"*104*#",15
 print(Date.now() / 1000);
 
 AT+CSCLK=2
+
+at.cmd("AT+CNMP?", print);
+# GSM only
+at.cmd("AT+CNMP=13", print);
+# LTE only
+at.cmd("AT+CNMP=38", print);
+
+at.cmd("ATI", print);
+at.cmd("AT+CLAC", print);
+at.cmd("AT+CLAC=?", print);
