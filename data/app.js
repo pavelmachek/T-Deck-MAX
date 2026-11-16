@@ -845,7 +845,7 @@ parse_status: function(msg) {
             watch.newMsg("!gone!");
         print("p0: Wake modem?");
         __write_at(0, "\n"); /* Wake modem from powersave if any */
-        setTimeout(at.periodic_1, 10000);
+        setTimeout(at.periodic_1, 1000);
     },
     
     periodic_1: function() {
@@ -860,6 +860,7 @@ parse_status: function(msg) {
 
     periodic_3: function() {
         print("P3: enter powersave?\n");
+        __enter_sleep(this.period, 3);
     },
     
     from_modem: function(flags, msg) {

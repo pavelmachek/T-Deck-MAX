@@ -113,3 +113,5 @@ __write_at(0, "ATI");
 
 at_periodic();
 at.sms_notify();
+
+__enter_sleep(1000, 3);
