@@ -897,6 +897,6 @@ void ui_system_sleep(void)
 {
     disp_sleep(".oO Light sleep");
     Serial.print("Entering light sleep");
-    hw_system_sleep(0, 3);
+    hw_system_sleep(0, 2);
     Serial.print("Exited light sleep");
 }
