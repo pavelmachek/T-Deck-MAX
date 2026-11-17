@@ -878,7 +878,8 @@ var dst  = match[9];
         (localTime - offsetMinutes * 60 * 1000) / 1000
     );
 
-    print("unix time", res);
+        print("unix time", res);
+        __set_hardware(1, res);
     },
 
     period: 60000, /* msec */
