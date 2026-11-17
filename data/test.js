@@ -118,3 +118,9 @@ at.sms_notify();
 
 __enter_sleep(1000, 3);
 
+// Example
+const timestamp = qltsToUnixTimestamp(
+    "26/10/26,21:07:57+04,0"
+);
+
+print(at.parse_time("26/10/26,21:07:57+04,0"));

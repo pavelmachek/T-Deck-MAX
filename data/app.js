@@ -745,6 +745,7 @@ var at = {
     last_ok: 0,
     last_status: {},
     last_details: {},
+    powersave: 1,
     
     sanitize: function(str) {
         return str.replace(/[^\x20-\x7E]/g, "_");
@@ -838,6 +839,48 @@ parse_status: function(msg) {
     return status;
 },
 
+    parse_time: function(input) {
+
+        var match = input.match(
+    /(\d{2})\/(\d{2})\/(\d{2}),(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}),(\d)/
+);
+
+if (!match) {
+    throw new Error("Invalid QLTS format");
+}
+
+var yy   = match[1];
+var MM   = match[2];
+var dd   = match[3];
+var hh   = match[4];
+var mm   = match[5];
+var ss   = match[6];
+var sign = match[7];
+var tz   = match[8];
+var dst  = match[9];
+
+    const year = 2000 + Number(yy);
+    const month = Number(MM) - 1;
+
+    const offsetMinutes =
+        (sign === "+" ? 1 : -1) * Number(tz) * 15;
+
+    const localTime = Date.UTC(
+        year,
+        month,
+        Number(dd),
+        Number(hh),
+        Number(mm),
+        Number(ss)
+    );
+
+    var res = Math.floor(
+        (localTime - offsetMinutes * 60 * 1000) / 1000
+    );
+
+    print("unix time", res);
+    },
+
     period: 60000, /* msec */
     periodic: function() {
         var now = Date.now();
@@ -855,12 +898,14 @@ parse_status: function(msg) {
 
     periodic_2: function() {
         print("p2: Back to powersave?");
-        at.cmd("AT+CSCLK=2", at.periodic_3);
+        if (at.powersave > 0)
+            at.cmd("AT+CSCLK=2", at.periodic_3);
     },
 
     periodic_3: function() {
         print("P3: enter powersave?\n");
-        __enter_sleep(this.period, 3);
+        if (at.powersave > 1)
+            __enter_sleep(this.period, 3);
     },
     
     from_modem: function(flags, msg) {
@@ -898,6 +943,11 @@ parse_status: function(msg) {
         this.on_ussd(msg.slice(10));
         return;
       }
+
+      if (msg.startsWith("+QLTS:")) {
+          this.parse_time(msg);
+          return;
+      }        
 
       // FIXME: do state == 2 when expecting just an echo?
         if (this.state == 0) {
