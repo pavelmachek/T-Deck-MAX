@@ -127,3 +127,4 @@ print(at.parse_time("+QLTS: 26/10/26,21:07:57+04,0"));
 at.cmd("AT+QLTS", print);
 
 print(new Date());
+__set_timezone(1, "GMT-1");

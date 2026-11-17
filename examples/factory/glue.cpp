@@ -163,6 +163,21 @@ static duk_ret_t js_write_at(duk_context *ctx)
     }
 }
 
+static duk_ret_t js_set_timezone(duk_context *ctx)
+{
+    int reg = duk_require_int(ctx, 0);
+    const char *val = duk_require_string(ctx, 1);
+    int ret;
+
+    if (reg)
+        return duk_error(ctx, DUK_ERR_RANGE_ERROR,
+		       "wrongness with at command FIXME");
+
+    setenv("TZ", val, 1);
+    tzset();
+
+    return 0;  /* No JavaScript return value */
+}
 
 static duk_ret_t js_print(duk_context *ctx)
 {
@@ -221,6 +236,9 @@ static void js_register_globals(void)
     duk_push_c_function(ctx, js_write_at, 2);
     duk_put_global_string(ctx, "__write_at");
 
+    duk_push_c_function(ctx, js_set_timezone, 2);
+    duk_put_global_string(ctx, "__set_timezone");
+    
     duk_push_c_function(ctx, js_enter_sleep, 2);
     duk_put_global_string(ctx, "__enter_sleep");
     
