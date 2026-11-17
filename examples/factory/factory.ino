@@ -311,7 +311,8 @@ static bool bq25896_init(void)
         // set battery charge voltage
         //PPM.setChargeTargetVoltage(4288);
 	// Unfortunately, this causes reboots when USB is unplugged
-	PPM.setChargeTargetVoltage(4000);
+	// 4000 is fine, cca 85%
+	PPM.setChargeTargetVoltage(3936);
 
         // Set charge current
         //PPM.setChargerConstantCurr(1024);
