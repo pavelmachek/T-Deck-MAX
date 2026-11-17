@@ -750,135 +750,134 @@ var at = {
     sanitize: function(str) {
         return str.replace(/[^\x20-\x7E]/g, "_");
     },
-
     
-parse_status: function(msg) {
-    if (!msg.startsWith("+CPSI:")) {
-        return null;
-    }
+    parse_status: function(msg) {
+        if (!msg.startsWith("+CPSI:")) {
+            return null;
+        }
 
-    const fields = msg.substring(6).trim().split(",");
+        const fields = msg.substring(6).trim().split(",");
 
-    const status = {
-        mode: fields[0],
-        operation: fields[1]
-    };
+        const status = {
+            mode: fields[0],
+            operation: fields[1]
+        };
 
-    const details = {};
+        const details = {};
 
-    status.available = false;
-    
-    if (status.mode === "NO SERVICE") {
+        status.available = false;
+        
+        if (status.mode === "NO SERVICE") {
+            return status;
+        }
+
+        if (status.operation === "Online") {
+            status.available = true;
+            this.last_ok = Date.now();
+        }
+
+        // Parse MCC-MNC
+        const plmn = (fields[2] || "").split("-");
+
+        status.mcc = plmn[0] || null;
+        status.mnc = plmn[1] || null;
+
+        if (status.mode === "LTE") {
+            Object.assign(details, {
+                lac: fields[3],
+                cell_id: fields[4],
+                physical_cell_id: fields[5],
+                band: fields[6],
+                earfcn: fields[7],
+                downlink_bandwidth: fields[8],
+                uplink_bandwidth: fields[9],
+                rsrq: fields[10],
+                rsrp: fields[11],
+                rssi: fields[12],
+                rssnr: fields[13]
+            });
+        }
+        else if (status.mode === "GSM") {
+            Object.assign(details, {
+                lac: fields[3],
+                cell_id: fields[4],
+                arfcn: fields[5],
+                rxlev: fields[6],
+                track_lo_adjust: fields[7],
+                c1_c2: fields[8]
+            });
+        }
+        else if (status.mode === "WCDMA") {
+            Object.assign(details, {
+                lac: fields[3],
+                cell_id: fields[4],
+                band: fields[5],
+                psc: fields[6],
+                frequency: fields[7],
+                ssc: fields[8],
+                ecio: fields[9],
+                rscp: fields[10],
+                quality: fields[11],
+                rxlev: fields[12],
+                txpwr: fields[13]
+            });
+        }
+
+        print(status, details);
+        //        var msg = status.operation + "," + status.mode + "," + status.mcc + status.mnc;
+        if (this.last_status.operation != status.operation)
+            watch.newMsg(status.operation);
+        if (this.last_status.mode != status.mode)
+            watch.newMsg(status.mode);
+        if (this.last_status.mcc+this.last_status.mnc != status.mcc+status.mnc)
+            watch.newMsg(status.mcc+" "+status.mnc);
+
+        this.last_status = status;
+        this.last_details = details;
+        
         return status;
-    }
-
-    if (status.operation === "Online") {
-        status.available = true;
-        this.last_ok = Date.now();
-    }
-
-    // Parse MCC-MNC
-    const plmn = (fields[2] || "").split("-");
-
-    status.mcc = plmn[0] || null;
-    status.mnc = plmn[1] || null;
-
-    if (status.mode === "LTE") {
-        Object.assign(details, {
-            lac: fields[3],
-            cell_id: fields[4],
-            physical_cell_id: fields[5],
-            band: fields[6],
-            earfcn: fields[7],
-            downlink_bandwidth: fields[8],
-            uplink_bandwidth: fields[9],
-            rsrq: fields[10],
-            rsrp: fields[11],
-            rssi: fields[12],
-            rssnr: fields[13]
-        });
-    }
-    else if (status.mode === "GSM") {
-        Object.assign(details, {
-            lac: fields[3],
-            cell_id: fields[4],
-            arfcn: fields[5],
-            rxlev: fields[6],
-            track_lo_adjust: fields[7],
-            c1_c2: fields[8]
-        });
-    }
-    else if (status.mode === "WCDMA") {
-        Object.assign(details, {
-            lac: fields[3],
-            cell_id: fields[4],
-            band: fields[5],
-            psc: fields[6],
-            frequency: fields[7],
-            ssc: fields[8],
-            ecio: fields[9],
-            rscp: fields[10],
-            quality: fields[11],
-            rxlev: fields[12],
-            txpwr: fields[13]
-        });
-    }
-
-    print(status, details);
-    //        var msg = status.operation + "," + status.mode + "," + status.mcc + status.mnc;
-    if (this.last_status.operation != status.operation)
-        watch.newMsg(status.operation);
-    if (this.last_status.mode != status.mode)
-        watch.newMsg(status.mode);
-    if (this.last_status.mcc+this.last_status.mnc != status.mcc+status.mnc)
-        watch.newMsg(status.mcc+" "+status.mnc);
-
-    this.last_status = status;
-    this.last_details = details;
-    
-    return status;
-},
+    },
 
     parse_time: function(input) {
 
         var match = input.match(
-    /(\d{2})\/(\d{2})\/(\d{2}),(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}),(\d)/
-);
+            /(\d{2})\/(\d{2})\/(\d{2}),(\d{2}):(\d{2}):(\d{2})([+-])(\d{2}),(\d)/
+        );
 
-if (!match) {
-    throw new Error("Invalid QLTS format");
-}
+        if (!match) {
+            throw new Error("Invalid QLTS format");
+        }
 
-var yy   = match[1];
-var MM   = match[2];
-var dd   = match[3];
-var hh   = match[4];
-var mm   = match[5];
-var ss   = match[6];
-var sign = match[7];
-var tz   = match[8];
-var dst  = match[9];
+        var yy   = match[1];
+        var MM   = match[2];
+        var dd   = match[3];
+        var hh   = match[4];
+        var mm   = match[5];
+        var ss   = match[6];
+        var sign = match[7];
+        var tz   = match[8];
+        var dst  = match[9];
 
-    const year = 2000 + Number(yy);
-    const month = Number(MM) - 1;
+        const year = 2000 + Number(yy);
+        const month = Number(MM) - 1;
 
-    const offsetMinutes =
-        (sign === "+" ? 1 : -1) * Number(tz) * 15;
+        const offsetMinutes =
+              (sign === "+" ? 1 : -1) * Number(tz) * 15;
 
-    const localTime = Date.UTC(
-        year,
-        month,
-        Number(dd),
-        Number(hh),
-        Number(mm),
-        Number(ss)
-    );
+        const localTime = Date.UTC(
+            year,
+            month,
+            Number(dd),
+            Number(hh),
+            Number(mm),
+            Number(ss)
+        );
 
-    var res = Math.floor(
-        (localTime - offsetMinutes * 60 * 1000) / 1000
-    );
+        var res = Math.floor(
+            (localTime - offsetMinutes * 60 * 1000) / 1000
+        );
 
-        print("unix time", res);
+        print("unix time", res, "minutes offset", offsetMinutes);
         __set_hardware(1, res);
     },
 
