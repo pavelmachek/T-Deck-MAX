@@ -15,6 +15,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <sys/time.h>
+#include <time.h>
+
 #include "ui_deckpro_port.h"
 
 /*
@@ -124,6 +127,16 @@ static duk_ret_t js_set_hardware(duk_context *ctx)
 
     switch (reg) {
     case 0x0000: setCpuFrequencyMhz(val); return 0;
+    case 0x0001: {
+        struct timeval tv = {};
+        
+        tv.tv_sec = val;
+        tv.tv_usec = 0;
+
+        settimeofday(&tv, nullptr);
+        return 0;
+    }
+        
     case 0x0200: analogWrite(BOARD_KEYBOARD_LED, val); return 0; /* 0..255 */
     case 0x0201: analogWrite(BOARD_EPD_BL, val); return 0; /* 0..255 */
     case 0x0300: if (val) A7682E_init(); return 0;
