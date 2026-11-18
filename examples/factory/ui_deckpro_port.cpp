@@ -752,23 +752,27 @@ static void suspend_devices(int flags)
     // extern TouchDrvCSTXXX touch;
     extern ExtensionIOXL9555 xl9555_io;
     // touch.sleep();
-    hyn_sleep();
+    if (flags & 0x20)    
+      hyn_sleep();
 
-    //    if (flags & 0x20)
     //        display_sleep();
     
-    if (lora_is_available()) {
+    if ((flags & 0x80) && lora_is_available()) {
         lora_sleep();
     }
 
     if (flags & 0x40)
         SerialMon.end();
-    SerialAT.end();
-    SerialGPS.end();
+    
+    if (flags & 0x100) {
+      SerialAT.end();
+      SerialGPS.end();
 
-    Serial1.end();
+      Serial1.end();
+    }
 
-    SPI.end();
+    if (flags & 0x200)
+      SPI.end();
 
     const uint8_t expands[] = {
         BOARD_XL9555_00_6609_EN,
@@ -777,7 +781,8 @@ static void suspend_devices(int flags)
         BOARD_XL9555_03_1V8_EN,
         BOARD_XL9555_05_MOTOR_EN,
     };
-    for (auto pin : expands) {
+    if (flags & 0x400)
+      for (auto pin : expands) {
         xl9555_io.digitalWrite(pin, LOW);
         delay(1);
     }
@@ -790,7 +795,8 @@ static void suspend_devices(int flags)
         BOARD_XL9555_11_KEY_RST,
         BOARD_XL9555_12_AUDIO_SEL,
     };
-    for (auto pin : expands2) {
+    if (flags & 0x800)
+      for (auto pin : expands2) {
         // xl9555_io.digitalWrite(pin, LOW);
         xl9555_io.pinMode(pin, INPUT);
         delay(1);
@@ -836,7 +842,8 @@ static void suspend_devices(int flags)
         BOARD_SPI_MISO,
     };
 
-    for (auto pin : pins) {
+    if (flags & 0x1000)
+      for (auto pin : pins) {
         log_i("Set pin %d to open drain\n", pin);
         gpio_reset_pin((gpio_num_t )pin);
         // pinMode(pin, OPEN_DRAIN);
@@ -853,7 +860,8 @@ static void suspend_devices(int flags)
         BOARD_ES8311_LRCK,
         BOARD_ES8311_DSDIN,
     };
-    for (auto pin : pins2) {
+    if (flags & 0x2000)
+      for (auto pin : pins2) {
         log_i("Set pin %d to open drain\n", pin);
         gpio_reset_pin((gpio_num_t )pin);
         // pinMode(pin, OPEN_DRAIN);
@@ -861,6 +869,7 @@ static void suspend_devices(int flags)
         digitalWrite(pin, LOW);
     }
 
+    if (flags & 0x4000)
     Wire.end();
 
     // gpio_reset_pin((gpio_num_t)BOARD_GPS_PPS);
@@ -877,7 +886,7 @@ static void suspend_devices(int flags)
 
 void ui_system_sleep_deep(void)
 {
-    suspend_devices(0x60);
+    suspend_devices(0xfffffff0);
 
     // esp_sleep_enable_ext0_wakeup((gpio_num_t)ENCODER_KEY, 0);
     esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);
