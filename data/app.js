@@ -1730,9 +1730,35 @@ var watch = {
     }
 };
 
+/*
+ * Test / debugging stuff
+ */
+
+var t = {
+    sleep: function(test) {
+  print("bat voltage", __get_hardware(0x102));
+  print("bat current", __get_hardware(0x104));
+  print("bat percent", __get_hardware(0x105));
+  print("remaining capacity", __get_hardware(0x106));
+  __enter_sleep(60000, test);
+  cur =	__get_hardware(0x104);
+  print("Woke up");
+  print("bat current", __get_hardware(0x104));
+  print("bat percent", __get_hardware(0x105));
+  print("remaining capacity", __get_hardware(0x106));
+  watch.newMsg("" + cur);
+  print("bat current", __get_hardware(0x104));
+        print("bat current", cur);
+        print("...test was", test);
+    }
+};
+
 g.reset();
 
-// Start
+/*
+ * Startup
+ */
+
 watch.init();
 
 function at_periodic() {
@@ -1742,8 +1768,7 @@ function at_periodic() {
 }
 
 at_periodic();
-var at_timer = setInterval(at_periodic, at.period);
-
+//var at_timer = setInterval(at_periodic, at.period);
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  

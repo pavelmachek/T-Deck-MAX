@@ -131,20 +131,9 @@ __set_timezone(1, "GMT-1");
 
 __enter_sleep(60000, 0x10);
 
-function t_sleep(test) {
-  print("bat voltage", __get_hardware(0x102));
-  print("bat current", __get_hardware(0x104));
-  print("bat percent", __get_hardware(0x105));
-  print("remaining capacity", __get_hardware(0x106));
-  __enter_sleep(60000, test);
-  cur = __get_hardware(0x104);
-  print("Woke up");
-  print("bat current", __get_hardware(0x104));
-  print("bat percent", __get_hardware(0x105));
-  print("remaining capacity", __get_hardware(0x106));
-  watch.newMsg("" + cur);
-  print("bat current", __get_hardware(0x104));
-  print("bat current", cur);
-}
 
+t_sleep(0x10); // ok, basics work
+t_sleep(0x30); // ok
+t_sleep(0x70); // kills input, probably whole system
+t.sleep(0xc0);
 
