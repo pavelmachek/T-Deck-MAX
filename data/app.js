@@ -1740,7 +1740,7 @@ var t = {
   print("bat current", __get_hardware(0x104));
   print("bat percent", __get_hardware(0x105));
   print("remaining capacity", __get_hardware(0x106));
-  __enter_sleep(60000, test);
+  __enter_sleep(5000, test);
   cur =	__get_hardware(0x104);
   print("Woke up");
   print("bat current", __get_hardware(0x104));

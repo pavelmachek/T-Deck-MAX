@@ -132,8 +132,15 @@ __set_timezone(1, "GMT-1");
 __enter_sleep(60000, 0x10);
 
 
-t_sleep(0x10); // ok, basics work
-t_sleep(0x30); // ok
-t_sleep(0x70); // kills input, probably whole system
-t.sleep(0xc0);
+t.sleep(0x10); now(); // ok, basics work; -34 mA
+t.sleep(0x30); // ok
+t.sleep(0x70); // 0x40 -- kills input, probably whole system
+t.sleep(0xb0);
+t.sleep(0xfb0); now(); // ok .. possibly kills display
+t.sleep(0x1fb0); now(); // i2c has problem, system works
+t.sleep(0x3fb0); now(); // wire has problems, i2c stops responding, but system works
+t.sleep(0xffb0); now(); // locks system; wire has problems
+
+__enter_sleep(50000000, 0x3fb0);
+
 
