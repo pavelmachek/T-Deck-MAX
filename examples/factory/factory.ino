@@ -92,6 +92,7 @@ static char phone_end_reason[UI_PHONE_STATUS_LEN] = {0};
 static void factory_touch_key_event(uint8_t key_id, bool pressed, void *user_data)
 {
     (void)user_data;
+    printf("touch: id %d, press %d\n", key_id, pressed);
     if (pressed && key_id < 3) {
         scr_mgr_pop(false);
     }
