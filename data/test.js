@@ -128,3 +128,5 @@ at.cmd("AT+QLTS", print);
 
 print(new Date());
 __set_timezone(1, "GMT-1");
+
+__enter_sleep(60000, 0x10);

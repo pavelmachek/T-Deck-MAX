@@ -742,20 +742,27 @@ void ui_motor_stop(void)
 
 extern void display_sleep(void);
 
-void ui_system_sleep_deep(void)
+/*
+   flags & 0x03: wakeup sources
+         & 0x70: hardware powerdown
+*/
+
+static void suspend_devices(int flags)
 {
     // extern TouchDrvCSTXXX touch;
     extern ExtensionIOXL9555 xl9555_io;
     // touch.sleep();
     hyn_sleep();
 
-    display_sleep();
+    //    if (flags & 0x20)
+    //        display_sleep();
     
     if (lora_is_available()) {
         lora_sleep();
     }
 
-    SerialMon.end();
+    if (flags & 0x40)
+        SerialMon.end();
     SerialAT.end();
     SerialGPS.end();
 
@@ -866,6 +873,11 @@ void ui_system_sleep_deep(void)
     // digitalWrite(BOARD_A7682E_PWRKEY, LOW);
     // gpio_hold_en((gpio_num_t)BOARD_A7682E_PWRKEY);
     // gpio_deep_sleep_hold_en();
+}
+
+void ui_system_sleep_deep(void)
+{
+    suspend_devices(0x60);
 
     // esp_sleep_enable_ext0_wakeup((gpio_num_t)ENCODER_KEY, 0);
     esp_sleep_enable_ext1_wakeup((1UL << BOARD_BOOT_PIN), ESP_EXT1_WAKEUP_ANY_LOW);
@@ -877,6 +889,8 @@ void ui_system_sleep_deep(void)
 int hw_system_sleep(int msec, int flags)
 {
     unsigned long wakeup = (1UL << BOARD_BOOT_PIN);
+    if (flags & 0x10)
+      suspend_devices(flags);
     if (flags & 1) {
       wakeup |= (1UL << BOARD_TOUCH_INT);
     }
@@ -897,6 +911,6 @@ void ui_system_sleep(void)
 {
     disp_sleep(".oO Light sleep");
     Serial.print("Entering light sleep");
-    hw_system_sleep(0, 2);
+    hw_system_sleep(0, 0);
     Serial.print("Exited light sleep");
 }
