@@ -69,6 +69,8 @@ void disp_full_refr(void); // Next global refresh
 void disp_partial_refr_for(uint32_t duration_ms);
 void disp_sleep(char *msg);
 
+void setup_hardware(void);
+
 bool A7682E_init(void);
 int phone_script_cmd(const char *at_cmd);
 

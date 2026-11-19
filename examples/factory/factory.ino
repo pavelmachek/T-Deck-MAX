@@ -1155,42 +1155,8 @@ static void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 
 RTC_DATA_ATTR unsigned long key = 0x12345678;
 
-void setup()
+void setup_xl9555_gpios(void)
 {
-    setCpuFrequencyMhz(240);
-    Serial.begin(115200);
-    Serial.print("setup: At 240 MHz, serial ready\n");
-    if (key == 0x12345678)
-        Serial.print("key is 12\n");
-    else if (key == 0xdeadbeef)
-        Serial.print("key is de\n");
-    else
-	Serial.print("key is something else\n");
-    key = 0xdeadbeef;
-#if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT
-    // Keep the UI responsive after the USB serial monitor is closed.
-    Serial.setTxTimeoutMs(0);
-#endif
-
-    // LORA、SD、EPD use the same SPI, in order to avoid mutual influence;
-    // before powering on, all CS signals should be pulled high and in an unselected state;
-    pinMode(BOARD_LORA_CS, OUTPUT);
-    digitalWrite(BOARD_LORA_CS, HIGH);
-    pinMode(BOARD_LORA_RST, OUTPUT); 
-    digitalWrite(BOARD_LORA_RST, HIGH);
-    pinMode(BOARD_SD_CS, OUTPUT); 
-    digitalWrite(BOARD_SD_CS, HIGH);
-    pinMode(BOARD_EPD_CS, OUTPUT); 
-    digitalWrite(BOARD_EPD_CS, HIGH);
-
-    // i2c devices
-    Wire.begin(BOARD_I2C_SDA, BOARD_I2C_SCL);
-    Serial.printf(" -------------------------- I2C -------------------------- \n");
-    SensorWireHelper::dumpDevices(Wire, Serial);
-
-    // XL9555 Init
-    Serial.printf(" -------------------------- XL9555 -------------------------- \n");
-    if (xl9555_io.init(Wire, BOARD_I2C_SDA, BOARD_I2C_SCL, XL9555_SLAVE_ADDRESS0)) {
         const uint8_t expands[] = {
             BOARD_XL9555_00_6609_EN,
             BOARD_XL9555_01_LORA_EN,
@@ -1243,6 +1209,35 @@ void setup()
         delay(20);
         xl9555_io.digitalWrite(BOARD_XL9555_07_TOUCH_RST, HIGH);
         delay(60);
+}
+
+void setup_hardware(void)
+{
+#if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT
+    // Keep the UI responsive after the USB serial monitor is closed.
+    Serial.setTxTimeoutMs(0);
+#endif
+
+    // LORA、SD、EPD use the same SPI, in order to avoid mutual influence;
+    // before powering on, all CS signals should be pulled high and in an unselected state;
+    pinMode(BOARD_LORA_CS, OUTPUT);
+    digitalWrite(BOARD_LORA_CS, HIGH);
+    pinMode(BOARD_LORA_RST, OUTPUT); 
+    digitalWrite(BOARD_LORA_RST, HIGH);
+    pinMode(BOARD_SD_CS, OUTPUT); 
+    digitalWrite(BOARD_SD_CS, HIGH);
+    pinMode(BOARD_EPD_CS, OUTPUT); 
+    digitalWrite(BOARD_EPD_CS, HIGH);
+
+    // i2c devices
+    Wire.begin(BOARD_I2C_SDA, BOARD_I2C_SCL);
+    Serial.printf(" -------------------------- I2C -------------------------- \n");
+    SensorWireHelper::dumpDevices(Wire, Serial);
+
+    // XL9555 Init
+    Serial.printf(" -------------------------- XL9555 -------------------------- \n");
+    if (xl9555_io.init(Wire, BOARD_I2C_SDA, BOARD_I2C_SCL, XL9555_SLAVE_ADDRESS0)) {
+        setup_xl9555_gpios();
     } else {
         while (1) {
             Serial.println("Failed to find XL9555 - check your wiring!");
@@ -1337,6 +1332,22 @@ void setup()
     peri_init_st[E_PERI_A7682E]     = A7682E_init();
 
     peri_init_st[E_PERI_TOUCH] = hyn_touch_init();
+}
+
+void setup(void)
+{
+    setCpuFrequencyMhz(240);
+    Serial.begin(115200);
+    Serial.print("setup: At 240 MHz, serial ready\n");
+    if (key == 0x12345678)
+        Serial.print("key is 12\n");
+    else if (key == 0xdeadbeef)
+        Serial.print("key is de\n");
+    else
+	Serial.print("key is something else\n");
+    key = 0xdeadbeef;
+
+    setup_hardware();
 
     lvgl_init();
 
@@ -1347,7 +1358,6 @@ void setup()
     // close backlight
     analogWrite(BOARD_EPD_BL, 0);
     analogWrite(BOARD_KEYBOARD_LED, 0);
-
 }
 
 uint32_t tick = 0;
