@@ -153,6 +153,47 @@ __enter_sleep(50000000, 0x3fb8); // ??
 
 __set_hardware(0x301, 1);
 
+# After boot:
+
+========== GPIO DUMP ==========
+GPIO00 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO01 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO02 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO03 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO04 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO05 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO06 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO07 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO08 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO09 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO10 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO11 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO12 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO13 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO14 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO15 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO16 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO17 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO18 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO19 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO20 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO21 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO26 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO27 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO28 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO29 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO30 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO31 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO32 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO33 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO34 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO35 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO36 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO37 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO38 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO39 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+===============================
+
 # Before sleep:
 
 GPIO00 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0

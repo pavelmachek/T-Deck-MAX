@@ -127,7 +127,7 @@ static duk_ret_t js_get_hardware(duk_context *ctx)
 
 void gpio_dump(void)
 {
-    Serial.println("\n========== GPIO DUMP ==========");
+    printf("\n========== GPIO DUMP ==========\n");
 
     for (int pin = 0; pin < 40; pin++)
     {
@@ -153,7 +153,7 @@ void gpio_dump(void)
         bool pulldown = (cfg >> 7) & 1;
         bool openDrain = (cfg >> 2) & 1;
 
-        Serial.printf(
+        printf(
             "GPIO%02d | DIR=%-3s | IN=%d | OUT=%d | PU=%d | PD=%d | OD=%d\n",
             pin,
             outputEnabled ? "OUT" : "IN",
@@ -165,7 +165,7 @@ void gpio_dump(void)
         );
     }
 
-    Serial.println("===============================");
+    printf("===============================\n");
 }
 
 static duk_ret_t js_set_hardware(duk_context *ctx)
