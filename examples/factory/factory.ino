@@ -1362,8 +1362,7 @@ void setup(void)
 
 uint32_t tick = 0;
 
-
-void loop()
+void loop(void)
 {
     //Serial.printf("Free stack: %u bytes\n", uxTaskGetStackHighWaterMark(NULL));
 		  

@@ -12,6 +12,11 @@
 #include "factory.h"
 #include "glue.h"
 
+#include "driver/gpio.h"
+#include "soc/gpio_reg.h"
+#include "soc/io_mux_reg.h"
+#include "esp_chip_info.h"
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -120,6 +125,49 @@ static duk_ret_t js_get_hardware(duk_context *ctx)
     return 1;
 }
 
+void gpio_dump(void)
+{
+    Serial.println("\n========== GPIO DUMP ==========");
+
+    for (int pin = 0; pin < 40; pin++)
+    {
+        if (!GPIO_IS_VALID_GPIO((gpio_num_t)pin))
+            continue;
+
+        // GPIO output enable
+        uint32_t enable = REG_READ(GPIO_ENABLE_REG);
+        bool outputEnabled = (enable >> pin) & 1;
+
+        // GPIO input level
+        uint32_t input = REG_READ(GPIO_IN_REG);
+        bool inputLevel = (input >> pin) & 1;
+
+        // GPIO output level
+        uint32_t output = REG_READ(GPIO_OUT_REG);
+        bool outputLevel = (output >> pin) & 1;
+
+        // Per-pin configuration
+        uint32_t cfg = REG_READ(GPIO_PIN0_REG + pin * 4);
+
+        bool pullup   = (cfg >> 8) & 1;
+        bool pulldown = (cfg >> 7) & 1;
+        bool openDrain = (cfg >> 2) & 1;
+
+        Serial.printf(
+            "GPIO%02d | DIR=%-3s | IN=%d | OUT=%d | PU=%d | PD=%d | OD=%d\n",
+            pin,
+            outputEnabled ? "OUT" : "IN",
+            inputLevel,
+            outputLevel,
+            pullup,
+            pulldown,
+            openDrain
+        );
+    }
+
+    Serial.println("===============================");
+}
+
 static duk_ret_t js_set_hardware(duk_context *ctx)
 {
     int reg = duk_require_int(ctx, 0);
@@ -140,6 +188,7 @@ static duk_ret_t js_set_hardware(duk_context *ctx)
     case 0x0200: analogWrite(BOARD_KEYBOARD_LED, val); return 0; /* 0..255 */
     case 0x0201: analogWrite(BOARD_EPD_BL, val); return 0; /* 0..255 */
     case 0x0300: if (val) A7682E_init(); return 0;
+    case 0x0301: if (val) gpio_dump(); return 0;
     }
     
     return duk_error(ctx, DUK_ERR_RANGE_ERROR,

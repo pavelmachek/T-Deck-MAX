@@ -149,4 +149,83 @@ print("bat percent", __get_hardware(0x105));
 print("remaining capacity", __get_hardware(0x106));
 __enter_sleep(50000000,  0xdb0); // ~ 20mA?
 
+__enter_sleep(50000000, 0x3fb8); // ??
 
+__set_hardware(0x301, 1);
+
+# Before sleep:
+
+GPIO00 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO01 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO02 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO03 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO04 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO05 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=1 | OD=0
+GPIO06 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO07 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO08 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO09 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO10 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO11 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO12 | DIR=IN  | IN=1 | OUT=0 | PU=1 | PD=0 | OD=0
+GPIO13 | DIR=OUT | IN=1 |
+GPIO14 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=1
+GPIO15 | DI
+GPIO16 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO17 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO18 | DIR=OUT | IN=
+GPIO19 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO20 | DI
+GPIO21 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO26 | DI
+GPIO27 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO28 | DI
+GPIO29 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO30 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO31 | DIR=IN  | IN=
+GPIO32 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO33 | DI
+GPIO36 | DIR=OUT | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO37 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO38 | DIR=IN  | IN=
+GPIO39 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+
+# After sleep:
+
+GPIO00 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO01 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO02 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO03 | DIR=IN  | IN=0 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO04 | DIR=IN  | IN=0 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO05 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO06 | DIR=IN  | IN=0 
+GPIO05 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO06 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO07 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO08 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO09 | DIR=IN  | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO10 | DIR=IN  | IN=0 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO11 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO12 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO13 | DIR=IN  | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO14 | DIR=IN  | IN=1 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO15
+GPIO18 | DIR=OUT | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+PIO19 | DI
+GPIO20 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO21 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO26 | DIR=IN  | IN=
+GPIO27 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO28 | DI
+GPIO29 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO30 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO31 | DIR=IN  | IN=
+GPIO32 | DIR=IN  | IN=1 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO33 | DI
+GPIO34 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO35 | DI
+GPIO36 | DIR=IN  | IN=0 | OUT=1 | PU=0 | PD=0 | OD=0
+GPIO37 | DI
+GPIO38 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
+GPIO39 | DI===========
+====================

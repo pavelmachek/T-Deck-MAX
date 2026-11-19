@@ -914,6 +914,10 @@ int hw_system_sleep(int msec, int flags)
     if (msec)
       esp_sleep_enable_timer_wakeup(1ULL * 1000 * msec); 
     esp_light_sleep_start();
+
+    if (flags & 8) {
+      setup_hardware();
+    }
     return 0;
 }
 
