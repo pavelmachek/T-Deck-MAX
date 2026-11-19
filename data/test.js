@@ -141,6 +141,12 @@ t.sleep(0x1fb0); now(); // i2c has problem, system works
 t.sleep(0x3fb0); now(); // wire has problems, i2c stops responding, but system works
 t.sleep(0xffb0); now(); // locks system; wire has problems
 
-__enter_sleep(50000000, 0x3fb0);
+__enter_sleep(50000000, 0x3fb0); // cca 2.3mA, good.
+
+__enter_sleep(50000000,  0x5b0); // cca 14mA
+
+print("bat percent", __get_hardware(0x105));
+print("remaining capacity", __get_hardware(0x106));
+__enter_sleep(50000000,  0xdb0); // ~ 20mA?
 
 

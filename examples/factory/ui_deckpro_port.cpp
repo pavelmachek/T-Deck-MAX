@@ -743,8 +743,9 @@ void ui_motor_stop(void)
 extern void display_sleep(void);
 
 /*
-   flags & 0x03: wakeup sources
-         & 0x70: hardware powerdown
+   flags & 0x00003: wakeup sources
+         & 0x00010: suspend devices
+         & 0xfffe0: devices to suspend
 */
 
 static void suspend_devices(int flags)
