@@ -659,7 +659,6 @@ g.wrapString = function (text, maxWidth) {
 var ink = {
     color: 0, /* ink color */
     isInk: function () { return true; },
-    update: function () { },
     setColor: function () {
         g.setBgColor(1-this.color, 1-this.color, 1-this.color);
         g.setColor(this.color, this.color, this.color);
@@ -1366,6 +1365,7 @@ var App = {
 // ==================================================
 
 var MainScreen = {
+  tick: function() { MainScreen.draw(); },
   draw: function() {
     UI.clear();
 
@@ -1401,12 +1401,15 @@ var MainScreen = {
 
 var MenuScreen = {
   selected: 2,
-  num: 3,
+  num: 5,
 
   items: [
     {name:"Countdown",screen:null},
     {name:"Stopwatch",screen:null},
-    {name:"Appointments",screen:null}
+    {name:"Appointments",screen:null},
+    {name:"Draw",screen:null},
+    {name:"Phone",screen:null},
+    {name:"Clock",screen:null}
   ],
 
   draw: function() {
@@ -1447,6 +1450,9 @@ var MenuScreen = {
       if (this.selected===0) App.open(CountdownScreen);
       if (this.selected===1) App.open(StopwatchScreen);
       if (this.selected===2) App.open(AppointmentsScreen);
+      if (this.selected===3) App.open(DrawScreen); /* FIXME: implement */
+      if (this.selected===4) App.open(PhoneScreen);
+      if (this.selected===5) App.open(ClockScreen);
       return;
     }
 
@@ -1764,7 +1770,7 @@ var AppointmentEditScreen = {
 // INITIALIZATION / EVENT ROUTING
 // ==================================================
 
-function init() {
+function paper_init() {
   App.load();
 
   Bangle.loadWidgets();
@@ -1776,91 +1782,83 @@ function init() {
   });
 
   setInterval(function() {
-    CountdownScreen.tick();
-    StopwatchScreen.tick();
-
-    if (App.screen===MainScreen) {
-      MainScreen.draw();
-    }
+      if (App.screen && App.screen.tick) {
+          App.screen.tick();
+      }
+      ink.now();
   },1000);
 
   App.open(MainScreen);
 }
 
-init();
+paper_init();
 
 /*
  * Example application: time display
  */
 
-if (0) { /* Note: due to js being... bad languagee, you can't just reenable this using if (1) */
-  var cols = 3;
-  var rows = 10;
-  var lastSlot = -1;
+var ClockScreen = {
+    cols: 3,
+    rows: 10,
+    lastSlot: -1,
 
-  function drawClock() {
-    var now = new Date();
-    var slot = now.getMinutes() % (cols*rows);
-    // 29->30 transition is wrong, it goes from all white to all black
-    var ink = Math.floor(now.getMinutes() / (cols*rows)) % 2;
-    var w = g.getWidth();
-    var h = g.getHeight();
-    var cellW = w / cols;
-    var cellH = h / rows;
-    var i;
-    var col;
-    var row;
-    var x1;
-    var y1;
-    var x2;
-    var y2;
-    var time;
+    draw: function () {
+        var now = new Date();
+        var slot = now.getMinutes() % (cols*rows);
+        // 29->30 transition is wrong, it goes from all white to all black
+        var ink = Math.floor(now.getMinutes() / (cols*rows)) % 2;
+        var w = g.getWidth();
+        var h = g.getHeight();
+        var cellW = w / cols;
+        var cellH = h / rows;
+        var i;
+        var col;
+        var row;
+        var x1;
+        var y1;
+        var x2;
+        var y2;
+        var time;
 
-    // Redraw only when the minute changes.
-    if (slot === lastSlot) return;
-    lastSlot = slot;
+        // Redraw only when the minute changes.
+        if (slot === lastSlot) return;
+        lastSlot = slot;
 
-    g.setBgColor(1-ink, 1-ink, 1-ink);
-    g.clear();
+        g.setBgColor(1-ink, 1-ink, 1-ink);
+        g.clear();
 
-    for (i = 0; i < 30; i++) {
-      col = i % cols;
-      row = Math.floor(i / cols);
+        for (i = 0; i < 30; i++) {
+            col = i % cols;
+            row = Math.floor(i / cols);
 
-      x1 = Math.floor(col * cellW);
-      y1 = Math.floor(row * cellH);
-      x2 = Math.floor((col + 1) * cellW) - 1;
-      y2 = Math.floor((row + 1) * cellH) - 1;
+            x1 = Math.floor(col * cellW);
+            y1 = Math.floor(row * cellH);
+            x2 = Math.floor((col + 1) * cellW) - 1;
+            y2 = Math.floor((row + 1) * cellH) - 1;
 
-      if (i < slot) {
-        g.setColor(ink, ink, ink);
-        g.fillRect(x1, y1, x2, y2);
-      }
+            if (i < slot) {
+                g.setColor(ink, ink, ink);
+                g.fillRect(x1, y1, x2, y2);
+            }
 
-      if (0) {
-        g.setColor(1, 1, 1);
-        g.drawRect(x1, y1, x2, y2);
-      }
+            if (0) {
+                g.setColor(1, 1, 1);
+                g.drawRect(x1, y1, x2, y2);
+            }
 
-      if (i === slot) {
-        time = ("0" + now.getHours()).slice(-2) + ":" +
-          ("0" + now.getMinutes()).slice(-2);
+            if (i === slot) {
+                time = ("0" + now.getHours()).slice(-2) + ":" +
+                    ("0" + now.getMinutes()).slice(-2);
 
-        print("Time", time);
+                print("Time", time);
 
-        g.setColor(ink, ink, ink);
-        g.setFont("bitmap", 3);
-        g.setFontAlign(0, 0);
-        g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
-      }
+                g.setColor(ink, ink, ink);
+                g.setFont("bitmap", 3);
+                g.setFontAlign(0, 0);
+                g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
+            }
+        }
     }
-
-    g.flip();
-    __redraw = 1;
-  }
-
-//  drawClock();
-//  setInterval(drawClock, 1000);
 }
 
 /*
@@ -1978,7 +1976,7 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
         last = {x:x, y:y};
       } else touch(e);
     } else {
-      ink.update();
+      ink.now();
       last = null;
     }
   }
