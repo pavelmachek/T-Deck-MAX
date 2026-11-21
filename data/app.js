@@ -733,8 +733,7 @@ const BTN1 = 1;
 g.reset();
 
 /*
-
-  modem
+   Modem handling functionality
 */
 
 var at = {
@@ -967,19 +966,19 @@ var at = {
 
     on_call: function() {
         /* Modem does ringtone on its own */
-      watch.newCall();
-  },
+        watch.newCall();
+    },
 
-  on_sms: function() {
-      this.sms_notify();
-      watch.newSms();
-  },
+    on_sms: function() {
+        this.sms_notify();
+        watch.newSms();
+    },
 
-  on_ussd: function(msg) {
-    print("Ussd:", msg);
-      this.sms_notify();
-      watch.newUSSD();
-  },
+    on_ussd: function(msg) {
+        print("Ussd:", msg);
+        this.sms_notify();
+        watch.newUSSD();
+    },
 
     cmd: function(c, cb) {
         if (this.state != 0) {
@@ -993,110 +992,110 @@ var at = {
         __write_at(0, c);
     },
 
-  read_voltage: function(cb) {
-    this.cmd("AT+CBC", function(data) {
-        var voltage = null;
+    read_voltage: function(cb) {
+        this.cmd("AT+CBC", function(data) {
+            var voltage = null;
 
-        for (var i = 0; i < data.length; i++) {
-            var match = data[i].match(/\+CBC:\s*([\d.]+)V/i);
-            if (match) {
-                voltage = parseFloat(match[1]);
-                break;
+            for (var i = 0; i < data.length; i++) {
+                var match = data[i].match(/\+CBC:\s*([\d.]+)V/i);
+                if (match) {
+                    voltage = parseFloat(match[1]);
+                    break;
+                }
             }
-        }
 
-        cb(voltage);
-    });
-},
+            cb(voltage);
+        });
+    },
 
-read_temperature: function(cb) {
-    this.cmd("AT+CPMUTEMP", function(data) {
-        var temperature = null;
+    read_temperature: function(cb) {
+        this.cmd("AT+CPMUTEMP", function(data) {
+            var temperature = null;
 
-        for (var i = 0; i < data.length; i++) {
-            var match = data[i].match(/\+CPMUTEMP:\s*(-?\d+)/i);
-            if (match) {
-                temperature = parseInt(match[1], 10);
-                break;
+            for (var i = 0; i < data.length; i++) {
+                var match = data[i].match(/\+CPMUTEMP:\s*(-?\d+)/i);
+                if (match) {
+                    temperature = parseInt(match[1], 10);
+                    break;
+                }
             }
-        }
 
-        cb(temperature);
-    });
-},
+            cb(temperature);
+        });
+    },
 
-read_environment: function(cb) {
-    this.read_voltage(function(voltage) {
-        at.read_temperature(function(temperature) {
-            cb({
-                voltage: voltage,
-                temperature: temperature
+    read_environment: function(cb) {
+        this.read_voltage(function(voltage) {
+            at.read_temperature(function(temperature) {
+                cb({
+                    voltage: voltage,
+                    temperature: temperature
+                });
             });
         });
-    });
-},
+    },
 
-  print_environment: function() { 
-at.read_environment(function(env) {
-    print("Supply voltage:", env.voltage, "V");
-    print("Modem temperature:", env.temperature, " C");
-});
-  },
+    print_environment: function() { 
+        at.read_environment(function(env) {
+            print("Supply voltage:", env.voltage, "V");
+            print("Modem temperature:", env.temperature, " C");
+        });
+    },
 
-  read_sms: function(cb) {
-    this.cmd('AT+CMGL="ALL"', function(data) {
-        var messages = [];
-        var current = null;
+    read_sms: function(cb) {
+        this.cmd('AT+CMGL="ALL"', function(data) {
+            var messages = [];
+            var current = null;
 
-        for (var i = 0; i < data.length; i++) {
-            var line = data[i];
+            for (var i = 0; i < data.length; i++) {
+                var line = data[i];
 
-            var match = line.match(
-                /^\+CMGL:\s*(\d+),"([^"]+)","([^"]*)","([^"]*)","([^"]*)"$/
-            );
+                var match = line.match(
+                    /^\+CMGL:\s*(\d+),"([^"]+)","([^"]*)","([^"]*)","([^"]*)"$/
+                );
 
-            if (match) {
-                if (current)
-                    messages.push(current);
+                if (match) {
+                    if (current)
+                        messages.push(current);
 
-                current = {
-                    index: parseInt(match[1], 10),
-                    status: match[2],
-                    number: match[3],
-                    name: match[4],
-                    date: match[5],
-                    body: ""
-                };
-            } else if (current && line != "OK" && line != "ERROR") {
-                if (current.body != "")
-                    current.body += "\n";
+                    current = {
+                        index: parseInt(match[1], 10),
+                        status: match[2],
+                        number: match[3],
+                        name: match[4],
+                        date: match[5],
+                        body: ""
+                    };
+                } else if (current && line != "OK" && line != "ERROR") {
+                    if (current.body != "")
+                        current.body += "\n";
 
-                current.body += line;
+                    current.body += line;
+                }
             }
-        }
 
-        if (current)
-            messages.push(current);
+            if (current)
+                messages.push(current);
 
-        cb(messages);
-    });
-  },
+            cb(messages);
+        });
+    },
 
-  print_sms: function() {
-    at.read_sms(function(messages) {
-    for (var i = 0; i < messages.length; i++) {
-        var sms = messages[i];
+    print_sms: function() {
+        at.read_sms(function(messages) {
+            for (var i = 0; i < messages.length; i++) {
+                var sms = messages[i];
 
-        print("SMS index:", sms.index);
-        print("Status:", sms.status);
-        print("From:", sms.number);
-        print("Date:", sms.date);
-        print("Message:", sms.body);
-    }
-});
-  },
+                print("SMS index:", sms.index);
+                print("Status:", sms.status);
+                print("From:", sms.number);
+                print("Date:", sms.date);
+                print("Message:", sms.body);
+            }
+        });
+    },
 
-  print: function(obj) {
+    print: function(obj) {
         if (obj instanceof Array) {
             for (var i = 0; i < obj.length; i++)
                 print(obj[i]);
@@ -1105,7 +1104,7 @@ at.read_environment(function(env) {
         }
     },
 
-  // FIXME: ussd does ok, and then reply comes
+    // FIXME: ussd does ok, and then reply comes
     ussd: function(code, cb) {
         this.cmd('AT+CUSD=1,"' + code + '",15', function(data) {
             var result = {
@@ -1128,19 +1127,19 @@ at.read_environment(function(env) {
         });
     },
 
-  // Does not work with longer names
-  play_tone: function (name) {
-    at.cmd('AT+CCMXPLAY="'+name+'",0,0', print);
-  },
+    // Does not work with longer names
+    play_tone: function (name) {
+        at.cmd('AT+CCMXPLAY="'+name+'",0,0', print);
+    },
 
-  sms_notify: function () {
-    at.play_tone('Ding-01.wav');
-  },
+    sms_notify: function () {
+        at.play_tone('Ding-01.wav');
+    },
 };
 
 function __from_modem(flags, msg) {
-  /* flags: 1 unhandled, 0 all messages */
-  at.from_modem(flags, msg);
+    /* flags: 1 unhandled, 0 all messages */
+    at.from_modem(flags, msg);
 }
 
 //at.cmd("AT+CBC", print);
@@ -1149,7 +1148,7 @@ function __from_modem(flags, msg) {
 // at.ussd("*104*#", at.print);
 
 /*
-  misc hw
+  Miscellaus hardware access, probably should get nicer abstraction
 */
 
 var hw = {
@@ -1283,7 +1282,6 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
 //  drawClock();
 //  setInterval(drawClock, 1000);
 }
-
 
 /*
  * Example application: drawing
@@ -1736,18 +1734,18 @@ var watch = {
 
 var t = {
     sleep: function(test) {
-  print("bat voltage", __get_hardware(0x102));
-  print("bat current", __get_hardware(0x104));
-  print("bat percent", __get_hardware(0x105));
-  print("remaining capacity", __get_hardware(0x106));
-  __enter_sleep(5000, test);
-  cur =	__get_hardware(0x104);
-  print("Woke up");
-  print("bat current", __get_hardware(0x104));
-  print("bat percent", __get_hardware(0x105));
-  print("remaining capacity", __get_hardware(0x106));
-  watch.newMsg("" + cur);
-  print("bat current", __get_hardware(0x104));
+        print("bat voltage", __get_hardware(0x102));
+        print("bat current", __get_hardware(0x104));
+        print("bat percent", __get_hardware(0x105));
+        print("remaining capacity", __get_hardware(0x106));
+        __enter_sleep(5000, test);
+        cur =	__get_hardware(0x104);
+        print("Woke up");
+        print("bat current", __get_hardware(0x104));
+        print("bat percent", __get_hardware(0x105));
+        print("remaining capacity", __get_hardware(0x106));
+        watch.newMsg("" + cur);
+        print("bat current", __get_hardware(0x104));
         print("bat current", cur);
         print("...test was", test);
     }

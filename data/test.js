@@ -273,3 +273,6 @@ GPIO37 | DI
 GPIO38 | DIR=IN  | IN=0 | OUT=0 | PU=0 | PD=0 | OD=0
 GPIO39 | DI===========
 ====================
+
+print(3*3)
+eval("print(3*3)")
