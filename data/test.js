@@ -279,3 +279,6 @@ eval("print(3*3)")
 
 App.screen = ClockScreen;
 App.screen.draw();
+
+App.screen = DrawScreen;
+App.screen.draw();

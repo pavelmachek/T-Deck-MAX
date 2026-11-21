@@ -1232,7 +1232,7 @@ var Storage = 0;
 // HELPERS
 // ==================================================
 
-var UI = {
+var UI = { /* FIXME */
   width: 176,
   height: 176,
   W: 176,
@@ -1322,7 +1322,7 @@ var App = {
         return;
         
     var col=xy.x<(UI.W/2)?0:1;
-    var row=Math.min(2,Math.floor(xy.y/59));
+    var row=Math.min(2,Math.floor(xy.y/(UI.H/3)));
 
     App.v_button(row*2+col);
   },
@@ -1853,7 +1853,7 @@ var ClockScreen = {
                 print("Time", time);
 
                 g.setColor(ink, ink, ink);
-                g.setFont("bitmap", 3);
+                g.setFont("Vector", 13);
                 g.setFontAlign(0, 0);
                 g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
             }
@@ -1887,17 +1887,17 @@ var DrawScreen = {
     },
 
     toolbar: function () {
-    white();
-    g.fillRect(0, WIDGETS, W, TOOLBAR);
+    DrawScreen.white();
+    g.fillRect(0, DrawScreen.WIDGETS, W, DrawScreen.TOOLBAR);
 
-    black();
-    g.drawLine(0, TOOLBAR, W, TOOLBAR);
+    DrawScreen.black();
+    g.drawLine(0, DrawScreen.TOOLBAR, W, DrawScreen.TOOLBAR);
 
-    g.setFont("Vector", (TOOLBAR - WIDGETS) * 0.5);
+    g.setFont("Vector", (DrawScreen.TOOLBAR - DrawScreen.WIDGETS) * 0.5);
 
-    var y1 = WIDGETS + 4;
+    var y1 = DrawScreen.WIDGETS + 4;
     var y2 = y1 + 4;
-    var y3 = WIDGETS + TOOLBAR - 4;
+    var y3 = DrawScreen.WIDGETS + DrawScreen.TOOLBAR - 4;
 
     // Black brush
     g.fillRect(5, y1, 40, y3);
@@ -1907,13 +1907,13 @@ var DrawScreen = {
     // White brush
     g.setColor(1, 1, 1);
     g.fillRect(48, y1, 83, y3);
-    black();
+    DrawScreen.black();
     g.drawRect(48, y1, 83, y3);
     g.drawString("W", 58, y2);
 
     // Brush size
-    black();
-    g.drawString("S" + brush, 91, y2);
+    DrawScreen.black();
+    g.drawString("S" + DrawScreen.brush, 91, y2);
 
     // Clear
     g.drawRect(137, y1, 171, y3);
@@ -1921,62 +1921,62 @@ var DrawScreen = {
     },
 
     clearCanvas: function () {
-    white();
-    g.fillRect(0, TOOLBAR+1, W - 1, H - 1);
+    DrawScreen.white();
+    g.fillRect(0, DrawScreen.TOOLBAR+1, W - 1, H - 1);
     },
 
     drawPoint: function (x, y, px, py) {
-    g.setColor(color, color, color);
+    g.setColor(DrawScreen.color, DrawScreen.color, DrawScreen.color);
     //g.setLineWidth(brushes[brush - 1]);
 
     if (px !== undefined) {
       g.drawLine(px, py, x, y);
     } else {
-      g.fillCircle(x, y, brushes[brush - 1]);
+      g.fillCircle(x, y, DrawScreen.brushes[DrawScreen.brush - 1]);
     }
     },
 
-    redraw: function () {
-    toolbar();
+    draw: function () {
+    DrawScreen.toolbar();
     },
 
     touch: function(e) {
-    if (e.y < WIDGETS || e.y > TOOLBAR) return;
+    if (e.y < DrawScreen.WIDGETS || e.y > DrawScreen.TOOLBAR) return;
 
     if (e.x < 46) {
       print("Draw");
-      color = 0;
+      DrawScreen.color = 0;
     } else if (e.x < 87) {
       print("Erase");
-      color = 1;
+      DrawScreen.color = 1;
     } else if (e.x < 134) {
-      brush++;
-      if (brush > 3) brush = 1;
-      print("Brush", brush);
+      DrawScreen.brush++;
+      if (DrawScreen.brush > 3) DrawScreen.brush = 1;
+      print("Brush", DrawScreen.brush);
     } else {
       print("Clear");
       clearCanvas();
     }
 
-    last = null;
-    redraw();
+    DrawScreen.last = null;
+     DrawScreen.draw();
     },
 
     drag: function(e) {
     if (e.b) {
-      if (e.y > TOOLBAR) {
+      if (e.y > DrawScreen.TOOLBAR) {
         var y = e.y;
         var x = e.x;
 
         drawPoint(x, y,
-                  last ? last.x : undefined,
-                  last ? last.y : undefined);
+                  DrawScreen.last ? DrawScreen.last.x : undefined,
+                  DrawScreen.last ? DrawScreen.last.y : undefined);
 
-        last = {x:x, y:y};
+        DrawScreen.last = {x:x, y:y};
       } else touch(e);
     } else {
       ink.now();
-      last = null;
+      DrawScreen.last = null;
     }
     }
 };
