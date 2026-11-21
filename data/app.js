@@ -1853,7 +1853,7 @@ var ClockScreen = {
                 print("Time", time);
 
                 g.setColor(ink, ink, ink);
-                g.setFont("Vector", 13);
+                g.setFont("Vector", 22);
                 g.setFontAlign(0, 0);
                 g.drawString(time, (x1 + x2) / 2, (y1 + y2) / 2);
             }
@@ -1954,7 +1954,7 @@ var DrawScreen = {
             print("Brush", DrawScreen.brush);
         } else {
             print("Clear");
-            clearCanvas();
+            DrawScreen.clearCanvas();
         }
 
         DrawScreen.last = null;
@@ -2241,7 +2241,7 @@ var watch = {
 
     newMsg: function(msg) {
         this.jump(1, 1);
-        g.setFont("Vector", 22);
+        g.setFont("Vector", 14);
         g.setFontAlign(-1, -1);
         g.drawString(msg, this.base_x, this.base_y);
         this.jump(1, 1);
