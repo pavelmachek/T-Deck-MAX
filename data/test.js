@@ -276,3 +276,6 @@ GPIO39 | DI===========
 
 print(3*3)
 eval("print(3*3)")
+
+App.screen = ClockScreen;
+App.screen.draw();

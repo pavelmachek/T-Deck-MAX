@@ -1788,7 +1788,7 @@ function paper_init() {
       ink.now();
   },1000);
 
-  App.open(MainScreen);
+  App.open(MenuScreen);
 }
 
 paper_init();
@@ -1804,13 +1804,13 @@ var ClockScreen = {
 
     draw: function () {
         var now = new Date();
-        var slot = now.getMinutes() % (cols*rows);
+        var slot = now.getMinutes() % (ClockScreen.cols*ClockScreen.rows);
         // 29->30 transition is wrong, it goes from all white to all black
-        var ink = Math.floor(now.getMinutes() / (cols*rows)) % 2;
+        var ink = Math.floor(now.getMinutes() / (ClockScreen.cols*ClockScreen.rows)) % 2;
         var w = g.getWidth();
         var h = g.getHeight();
-        var cellW = w / cols;
-        var cellH = h / rows;
+        var cellW = w / ClockScreen.cols;
+        var cellH = h / ClockScreen.rows;
         var i;
         var col;
         var row;
@@ -1821,15 +1821,15 @@ var ClockScreen = {
         var time;
 
         // Redraw only when the minute changes.
-        if (slot === lastSlot) return;
-        lastSlot = slot;
+        if (slot === ClockScreen.lastSlot) return;
+        ClockScreen.lastSlot = slot;
 
         g.setBgColor(1-ink, 1-ink, 1-ink);
         g.clear();
 
         for (i = 0; i < 30; i++) {
-            col = i % cols;
-            row = Math.floor(i / cols);
+            col = i % ClockScreen.cols;
+            row = Math.floor(i / ClockScreen.cols);
 
             x1 = Math.floor(col * cellW);
             y1 = Math.floor(row * cellH);
@@ -1869,25 +1869,24 @@ allow brush selection and white/black color select.
 
 */
 
-if (0) { /* Note: due to js being... bad languagee, you can't just reenable this using if (1) */
-  var W = g.getWidth();
-  var H = g.getHeight();
-  var WIDGETS = 0;
-  var TOOLBAR = WIDGETS+26;
-  var color = 0;
-  var brush = 2;
-  var brushes = [1, 2, 4];
-  var last = null;
+/* FIXME: this will not work, need "this." annotation all over */
+var DrawScreen = {
+    WIDGETS: 0,
+    TOOLBAR: this.WIDGETS+26,
+    color: 0,
+    brush: 2,
+    brushes: [1, 2, 4],
+    last: null,
 
-  function black() {
+    black: function () {
     g.setColor(0, 0, 0);
-  }
+    },
 
-  function white() {
+    white: function () {
     g.setColor(1, 1, 1);
-  }
+    },
 
-  function toolbar() {
+    toolbar: function () {
     white();
     g.fillRect(0, WIDGETS, W, TOOLBAR);
 
@@ -1919,14 +1918,14 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
     // Clear
     g.drawRect(137, y1, 171, y3);
     g.drawString("CLR", 140, y2);
-  }
+    },
 
-  function clearCanvas() {
+    clearCanvas: function () {
     white();
     g.fillRect(0, TOOLBAR+1, W - 1, H - 1);
-  }
+    },
 
-  function drawPoint(x, y, px, py) {
+    drawPoint: function (x, y, px, py) {
     g.setColor(color, color, color);
     //g.setLineWidth(brushes[brush - 1]);
 
@@ -1935,13 +1934,13 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
     } else {
       g.fillCircle(x, y, brushes[brush - 1]);
     }
-  }
+    },
 
-  function redraw() {
+    redraw: function () {
     toolbar();
-  }
+    },
 
-  function touch(e) {
+    touch: function(e) {
     if (e.y < WIDGETS || e.y > TOOLBAR) return;
 
     if (e.x < 46) {
@@ -1961,9 +1960,9 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
 
     last = null;
     redraw();
-  }
+    },
 
-  function drag(e) {
+    drag: function(e) {
     if (e.b) {
       if (e.y > TOOLBAR) {
         var y = e.y;
@@ -1979,26 +1978,8 @@ if (0) { /* Note: due to js being... bad languagee, you can't just reenable this
       ink.now();
       last = null;
     }
-  }
-
-  // Start application
-  g.clear(1);
-  clearCanvas();
-  Bangle.loadWidgets();
-  Bangle.drawWidgets();
-  toolbar();
-
-  Bangle.on('drag', drag);
-
-  if (0)
-  Bangle.setUI({
-    mode: "custom",
-    back: function() {
-      load();
-    },
-    drag: drag
-  });
-}
+    }
+};
 
 /*
  * Real application: phone monitor
