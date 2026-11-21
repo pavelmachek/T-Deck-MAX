@@ -153,6 +153,9 @@ __enter_sleep(50000000, 0x3fb8); // ??
 
 __set_hardware(0x301, 1);
 
+t.sleep(0xffb8); now(); // on resume, touchscreen has problem
+t.sleep(0xffba); now();
+
 # After boot:
 
 ========== GPIO DUMP ==========
