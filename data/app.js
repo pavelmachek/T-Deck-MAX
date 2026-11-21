@@ -1400,7 +1400,7 @@ var MainScreen = {
 // ==================================================
 
 var MenuScreen = {
-  selected: 2,
+  selected: 1,
   num: 5,
 
   items: [
@@ -1450,8 +1450,8 @@ var MenuScreen = {
       if (this.selected===0) App.open(CountdownScreen);
       if (this.selected===1) App.open(StopwatchScreen);
       if (this.selected===2) App.open(AppointmentsScreen);
-      if (this.selected===3) App.open(DrawScreen); /* FIXME: implement */
-      if (this.selected===4) App.open(PhoneScreen);
+      if (this.selected===3) App.open(DrawScreen);
+      if (this.selected===4) App.open(PhoneScreen); /* FIXME: implement */
       if (this.selected===5) App.open(ClockScreen);
       return;
     }
@@ -1869,7 +1869,6 @@ allow brush selection and white/black color select.
 
 */
 
-/* FIXME: this will not work, need "this." annotation all over */
 var DrawScreen = {
     WIDGETS: 0,
     TOOLBAR: this.WIDGETS+26,
@@ -1879,105 +1878,105 @@ var DrawScreen = {
     last: null,
 
     black: function () {
-    g.setColor(0, 0, 0);
+        g.setColor(0, 0, 0);
     },
 
     white: function () {
-    g.setColor(1, 1, 1);
+        g.setColor(1, 1, 1);
     },
 
     toolbar: function () {
-    DrawScreen.white();
-    g.fillRect(0, DrawScreen.WIDGETS, W, DrawScreen.TOOLBAR);
+        DrawScreen.white();
+        g.fillRect(0, DrawScreen.WIDGETS, UI.W, DrawScreen.TOOLBAR);
 
-    DrawScreen.black();
-    g.drawLine(0, DrawScreen.TOOLBAR, W, DrawScreen.TOOLBAR);
+        DrawScreen.black();
+        g.drawLine(0, DrawScreen.TOOLBAR, UI.W, DrawScreen.TOOLBAR);
 
-    g.setFont("Vector", (DrawScreen.TOOLBAR - DrawScreen.WIDGETS) * 0.5);
+        g.setFont("Vector", (DrawScreen.TOOLBAR - DrawScreen.WIDGETS) * 0.5);
 
-    var y1 = DrawScreen.WIDGETS + 4;
-    var y2 = y1 + 4;
-    var y3 = DrawScreen.WIDGETS + DrawScreen.TOOLBAR - 4;
+        var y1 = DrawScreen.WIDGETS + 4;
+        var y2 = y1 + 4;
+        var y3 = DrawScreen.WIDGETS + DrawScreen.TOOLBAR - 4;
 
-    // Black brush
-    g.fillRect(5, y1, 40, y3);
-    g.setColor(1, 1, 1);
-    g.drawString("B", 19, y2);
+        // Black brush
+        g.fillRect(5, y1, 40, y3);
+        g.setColor(1, 1, 1);
+        g.drawString("B", 19, y2);
 
-    // White brush
-    g.setColor(1, 1, 1);
-    g.fillRect(48, y1, 83, y3);
-    DrawScreen.black();
-    g.drawRect(48, y1, 83, y3);
-    g.drawString("W", 58, y2);
+        // White brush
+        g.setColor(1, 1, 1);
+        g.fillRect(48, y1, 83, y3);
+        DrawScreen.black();
+        g.drawRect(48, y1, 83, y3);
+        g.drawString("W", 58, y2);
 
-    // Brush size
-    DrawScreen.black();
-    g.drawString("S" + DrawScreen.brush, 91, y2);
+        // Brush size
+        DrawScreen.black();
+        g.drawString("S" + DrawScreen.brush, 91, y2);
 
-    // Clear
-    g.drawRect(137, y1, 171, y3);
-    g.drawString("CLR", 140, y2);
+        // Clear
+        g.drawRect(137, y1, 171, y3);
+        g.drawString("CLR", 140, y2);
     },
 
     clearCanvas: function () {
-    DrawScreen.white();
-    g.fillRect(0, DrawScreen.TOOLBAR+1, W - 1, H - 1);
+        DrawScreen.white();
+        g.fillRect(0, DrawScreen.TOOLBAR+1, UI.W - 1, UI.H - 1);
     },
 
     drawPoint: function (x, y, px, py) {
-    g.setColor(DrawScreen.color, DrawScreen.color, DrawScreen.color);
-    //g.setLineWidth(brushes[brush - 1]);
+        g.setColor(DrawScreen.color, DrawScreen.color, DrawScreen.color);
+        //g.setLineWidth(brushes[brush - 1]);
 
-    if (px !== undefined) {
-      g.drawLine(px, py, x, y);
-    } else {
-      g.fillCircle(x, y, DrawScreen.brushes[DrawScreen.brush - 1]);
-    }
+        if (px !== undefined) {
+            g.drawLine(px, py, x, y);
+        } else {
+            g.fillCircle(x, y, DrawScreen.brushes[DrawScreen.brush - 1]);
+        }
     },
 
     draw: function () {
-    DrawScreen.toolbar();
+        DrawScreen.toolbar();
     },
 
     touch: function(e) {
-    if (e.y < DrawScreen.WIDGETS || e.y > DrawScreen.TOOLBAR) return;
+        if (e.y < DrawScreen.WIDGETS || e.y > DrawScreen.TOOLBAR) return;
 
-    if (e.x < 46) {
-      print("Draw");
-      DrawScreen.color = 0;
-    } else if (e.x < 87) {
-      print("Erase");
-      DrawScreen.color = 1;
-    } else if (e.x < 134) {
-      DrawScreen.brush++;
-      if (DrawScreen.brush > 3) DrawScreen.brush = 1;
-      print("Brush", DrawScreen.brush);
-    } else {
-      print("Clear");
-      clearCanvas();
-    }
+        if (e.x < 46) {
+            print("Draw");
+            DrawScreen.color = 0;
+        } else if (e.x < 87) {
+            print("Erase");
+            DrawScreen.color = 1;
+        } else if (e.x < 134) {
+            DrawScreen.brush++;
+            if (DrawScreen.brush > 3) DrawScreen.brush = 1;
+            print("Brush", DrawScreen.brush);
+        } else {
+            print("Clear");
+            clearCanvas();
+        }
 
-    DrawScreen.last = null;
-     DrawScreen.draw();
+        DrawScreen.last = null;
+        DrawScreen.draw();
     },
 
     drag: function(e) {
-    if (e.b) {
-      if (e.y > DrawScreen.TOOLBAR) {
-        var y = e.y;
-        var x = e.x;
+        if (e.b) {
+            if (e.y > DrawScreen.TOOLBAR) {
+                var y = e.y;
+                var x = e.x;
 
-        drawPoint(x, y,
-                  DrawScreen.last ? DrawScreen.last.x : undefined,
-                  DrawScreen.last ? DrawScreen.last.y : undefined);
+                drawPoint(x, y,
+                          DrawScreen.last ? DrawScreen.last.x : undefined,
+                          DrawScreen.last ? DrawScreen.last.y : undefined);
 
-        DrawScreen.last = {x:x, y:y};
-      } else touch(e);
-    } else {
-      ink.now();
-      DrawScreen.last = null;
-    }
+                DrawScreen.last = {x:x, y:y};
+            } else touch(e);
+        } else {
+            ink.now();
+            DrawScreen.last = null;
+        }
     }
 };
 
