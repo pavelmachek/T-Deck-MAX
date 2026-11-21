@@ -1209,6 +1209,586 @@ hw.battery.print_all = function() {
 
 //print(hw.battery.print_all()); this prints extra "object object"
 
+
+/*
+ * Application basics / task switcher
+
+   Paper palm
+*/
+
+/*
+ * Bangle.js 2 - Personal Organizer
+ *
+ * Compatible style:
+ * - ES5 JavaScript
+ * - Basic Espruino APIs
+ * - No external libraries
+ */
+
+
+//var Storage = require("Storage");
+var Storage = 0;
+
+// ==================================================
+// HELPERS
+// ==================================================
+
+var UI = {
+  width: 176,
+  height: 176,
+  W: 176,
+  H: 176,
+
+  b_F1: 0,
+  b_up: 1,
+  b_F2: 2,
+  b_down: 3,
+  b_back: 4,
+  b_ok: 5,
+
+  clear: function() {
+    g.setBgColor(1,1,1);
+    g.setColor(0,0,0);
+    g.clear();
+  },
+
+  header: function(title) {
+    g.setFont("Vector",12);
+    g.setFontAlign(-1,-1);
+    g.drawString(title,5,3);
+    g.drawLine(0,19,UI.W,19);
+  },
+
+  center: function(text,y,size) {
+    g.setFont("Vector",size || 24);
+    g.setFontAlign(0,0);
+    g.drawString(text,UI.W/2,y);
+  },
+
+  footer: function(f1,f2) {
+    var s = 12;
+    g.setFont("Vector", s);
+    g.setFontAlign(0,0);
+    g.drawString(f1 || "",UI.W*0.25, UI.H-s);
+    g.drawString(f2 || "",UI.W*0.75, UI.H-s);
+  },
+
+  pad: function(n) {
+    return (n<10?"0":"")+n;
+  },
+
+  date: function(d) {
+    return d.getFullYear()+"-"+UI.pad(d.getMonth()+1)+"-"+UI.pad(d.getDate());
+  },
+
+  clock: function(d) {
+    return UI.pad(d.getHours())+":"+UI.pad(d.getMinutes());
+  },
+
+  button: function(button) {
+    return button;
+  }
+};
+
+// ==================================================
+// APPLICATION
+// ==================================================
+
+var App = {
+  screen: null,
+  appointments: [],
+  prev_button: 0,
+
+  open: function(screen) {
+    this.screen = screen;
+    this.draw();
+  },
+
+  draw: function() {
+    if (this.screen && this.screen.draw) {
+      this.screen.draw();
+    }
+  },
+
+  touch: function(button, xy) {
+    if (this.screen && this.screen.touch) {
+      this.screen.touch(button, xy);
+    }
+    
+    if (!button) {
+        this.prev_button = button;
+        return;
+    }
+    if (this.prev_button)
+        return;
+        
+    var col=xy.x<(UI.W/2)?0:1;
+    var row=Math.min(2,Math.floor(xy.y/59));
+
+    App.v_button(row*2+col);
+  },
+
+  v_button: function(button) {
+    if (this.screen && this.screen.v_button) {
+      this.screen.v_button(button);
+    }
+  },
+
+    save: function() {
+        if (Storage)
+            Storage.writeJSON("organizer.data", this.appointments);
+  },
+
+    load: function() {
+        if (!Storage)
+            return [];
+        this.appointments = Storage.readJSON("organizer.data",true) || [];
+  },
+
+  nextAppointment: function() {
+    var now = Date.now();
+    var next = null;
+
+    this.appointments.forEach(function(a) {
+      var d = new Date(a.date+"T"+a.time).getTime();
+
+      if (d>now && (!next || d<next.date)) {
+        next = {data:a,date:d};
+      }
+    });
+
+    return next ? next.data : null;
+  }
+};
+
+// ==================================================
+// MAIN SCREEN
+// ==================================================
+
+var MainScreen = {
+  draw: function() {
+    UI.clear();
+
+    var d = new Date();
+
+    UI.header(UI.date(d));
+    UI.center(UI.clock(d),48,42);
+
+    g.setFont("Vector",12);
+    g.setFontAlign(-1,-1);
+    g.drawString("NEXT APPOINTMENT",5,91);
+
+    var a = App.nextAppointment();
+
+    g.setFont("Vector",18);
+    if (a) {
+      g.drawString(a.title,5,112);
+      g.setFont("Vector",12);
+      g.drawString(a.date+" "+a.time,5,136);
+    } else {
+      g.drawString("None",5,115);
+    }
+  },
+
+  v_button: function(b) {
+    App.open(MenuScreen);
+  }
+};
+
+// ==================================================
+// MENU SCREEN
+// ==================================================
+
+var MenuScreen = {
+  selected: 2,
+  num: 3,
+
+  items: [
+    {name:"Countdown",screen:null},
+    {name:"Stopwatch",screen:null},
+    {name:"Appointments",screen:null}
+  ],
+
+  draw: function() {
+    UI.clear();
+    UI.header("MAIN MENU");
+
+    var i;
+    for (i=0;i<this.items.length;i++) {
+      var y=35+i*38;
+
+      if (i===this.selected) {
+        g.fillRect(3,y-3,173,y+25);
+        g.setColor(1,1,1);
+      }
+
+      g.setFont("Vector",22);
+      g.setFontAlign(-1,-1);
+      g.drawString(this.items[i].name,10,y);
+      g.setColor(0,0,0);
+    }
+  },
+
+  v_button: function(b) {
+    if (b===UI.b_back || b===0) {
+      App.open(MainScreen);
+      return;
+    }
+
+    if (b===UI.b_up) {
+      this.selected=(this.selected+(this.num-1))%(this.num);
+    }
+
+    if (b===UI.b_down) {
+      this.selected=(this.selected+1)%this.num;
+    }
+
+    if (b===UI.b_ok) {
+      if (this.selected===0) App.open(CountdownScreen);
+      if (this.selected===1) App.open(StopwatchScreen);
+      if (this.selected===2) App.open(AppointmentsScreen);
+      return;
+    }
+
+    this.draw();
+  }
+};
+
+// ==================================================
+// COUNTDOWN SCREEN
+// ==================================================
+
+var CountdownScreen = {
+  duration: 300000,
+  remaining: 300000,
+  end: 0,
+  running: false,
+
+  getRemaining: function() {
+    if (this.running) {
+      return Math.max(0,this.end-Date.now());
+    }
+    return this.remaining;
+  },
+
+  start: function() {
+    if (this.running) {
+      this.remaining=this.getRemaining();
+      this.running=false;
+    } else {
+      if (this.remaining<=0) {
+        this.remaining=this.duration;
+      }
+
+      this.end=Date.now()+this.remaining;
+      this.running=true;
+    }
+  },
+
+  reset: function() {
+    this.running=false;
+    this.remaining=this.duration;
+  },
+
+  draw: function() {
+    UI.clear();
+    UI.header("COUNTDOWN");
+
+    var s=Math.ceil(this.getRemaining()/1000);
+
+    UI.center(UI.pad(Math.floor(s/60))+":"+UI.pad(s%60), 70,38);
+    UI.center(this.running?"RUNNING":"PAUSED",112,14);
+
+    UI.footer("RESET","");
+  },
+
+  v_button: function(b) {
+    if (b===UI.b_back) {
+      App.open(MenuScreen);
+      return;
+    }
+
+    if ((b===UI.b_down) || (b===UI.b_up)) {
+      var step = 30000;
+      if (b===UI.b_down) { this.duration -= step; }
+      if (b===UI.b_up) { this.duration += step; }
+      if (!this.running)
+        this.remaining = this.duration;
+    }
+
+    if (b===UI.b_F1) this.reset();
+    if (b===UI.b_ok) this.start();
+
+    this.draw();
+  },
+
+  tick: function() {
+    if (this.running && this.getRemaining()<=0) {
+      this.running=false;
+      this.remaining=0;
+      Bangle.buzz(500);
+      //Bangle.beep(500);
+    }
+
+    if (App.screen===this) this.draw();
+  }
+};
+
+// ==================================================
+// STOPWATCH SCREEN
+// ==================================================
+
+var StopwatchScreen = {
+  elapsed: 0,
+  started: 0,
+  running: false,
+
+  getElapsed: function() {
+    return this.elapsed+
+      (this.running ? Date.now()-this.started : 0);
+  },
+
+  start: function() {
+    if (this.running) {
+      this.elapsed=this.getElapsed();
+      this.running=false;
+    } else {
+      this.started=Date.now();
+      this.running=true;
+    }
+  },
+
+  reset: function() {
+    this.elapsed=0;
+    this.running=false;
+  },
+
+  draw: function() {
+    UI.clear();
+    UI.header("STOPWATCH");
+
+    var s=Math.floor(this.getElapsed()/1000);
+    UI.center(UI.pad(Math.floor(s/60))+":"+UI.pad(s%60), 70,38);
+    UI.center(this.running?"RUNNING":"PAUSED",112,14);
+
+    UI.footer("RESET","");
+  },
+
+  v_button: function(b) {
+    if (b===UI.b_back) {
+      App.open(MenuScreen);
+      return;
+    }
+
+    if (b===UI.b_F1) this.reset();
+    if (b===UI.b_ok) this.start();
+
+    this.draw();
+  },
+
+  tick: function() {
+    if (App.screen===this) this.draw();
+  }
+};
+
+// ==================================================
+// APPOINTMENTS SCREEN
+// ==================================================
+
+var AppointmentsScreen = {
+  selected: 0,
+
+  draw: function() {
+    UI.clear();
+    UI.header("APPOINTMENTS");
+
+    g.setFont("Vector",18);
+    g.setFontAlign(-1,-1);
+
+    if (this.selected===0) {
+      g.drawRect(3,27,173,54);
+    }
+
+    g.drawString("Add new",8,30);
+
+    var i;
+
+    for (i=0;i<3;i++) {
+      var a=App.appointments[i];
+      if (!a) continue;
+
+      var y=59+i*27;
+
+      if (this.selected===i+1) {
+        g.fillRect(3,y-3,173,y+21);
+        g.setColor(1,1,1);
+      }
+
+      g.drawString(a.title,8,y);
+      g.setColor(0,0,0);
+    }
+
+    UI.footer("","");
+  },
+
+  v_button: function(b) {
+    if (b===UI.b_back) {
+      App.open(MenuScreen);
+      return;
+    }
+
+    if (b===UI.b_up) {
+      this.selected=Math.max(0,this.selected-1);
+    }
+
+    if (b===UI.b_down) {
+      this.selected=Math.min(
+        App.appointments.length,
+        this.selected+1
+      );
+    }
+
+    if (b===UI.b_ok) {
+      if (this.selected===0) {
+        AppointmentEditScreen.init();
+        App.open(AppointmentEditScreen);
+        return;
+      }
+
+      App.appointments.splice(this.selected-1,1);
+      App.save();
+      this.selected=0;
+    }
+
+    this.draw();
+  }
+};
+
+// ==================================================
+// APPOINTMENT EDIT SCREEN
+// ==================================================
+
+var AppointmentEditScreen = {
+  title: "Appointment",
+  date: null,
+
+  init: function() {
+    this.title="Appointment";
+    this.date=new Date();
+    this.date.setMinutes(0);
+    this.field=0;
+  },
+
+  draw: function() {
+    UI.clear();
+    UI.header("NEW APPOINTMENT");
+
+    var labels=["TITLE","DATE","HOUR","MINUTE"];
+    var values=[
+      this.title,
+      UI.date(this.date),
+      this.date.getHours(),
+      this.date.getMinutes()
+    ];
+
+    var i;
+
+    for (i=0;i<4;i++) {
+      var y=32+i*29;
+
+      if (this.field===i) {
+        g.drawRect(2,y-3,173,y+23);
+      }
+
+      g.setFont("Vector",12);
+      g.setFontAlign(-1,-1);
+      g.drawString(labels[i],6,y);
+
+      g.setFont("Vector",16);
+      g.setFontAlign(1,-1);
+      g.drawString(values[i],168,y);
+    }
+
+    UI.footer("CH+","CH-");
+  },
+
+  v_button: function(b) {
+    if (b===UI.b_back) {
+      App.open(AppointmentsScreen);
+      return;
+    }
+
+    if (b===UI.b_up) {
+      this.field=(this.field+3)%4;
+    }
+
+    if (b===UI.b_down) {
+      this.field=(this.field+1)%4;
+    }
+
+    if (b===UI.b_F1 || b===UI.b_F2) {
+      var dir=b===UI.b_F1?1:-1;
+      var shift = 3600;
+
+      /* FIXME: 0 -> ignore */
+      if (this.field===1) { shift = 3600*24; }
+      if (this.field===2) { shift = 3600; }
+      if (this.field===3) { shift = 5*60; }
+      print("Shift: ", dir*shift);
+      this.date = new Date(this.date.getTime() + dir * shift * 1000);
+      print("New date: ", this.date);
+    }
+
+    if (b===UI.b_ok) {
+      if (this.field===3) {
+        /* FIXME */
+        App.appointments.push({
+          title:this.title,
+          date:this.date,
+          time:UI.pad(this.hour)+":"+UI.pad(this.minute)
+        });
+
+        App.save();
+        App.open(AppointmentsScreen);
+        return;
+      }
+
+      this.field++;
+    }
+
+    this.draw();
+  }
+};
+
+// ==================================================
+// INITIALIZATION / EVENT ROUTING
+// ==================================================
+
+function init() {
+  App.load();
+
+  Bangle.loadWidgets();
+  Bangle.drawWidgets();
+
+  var prev_button = 0;
+  Bangle.on("touch",function(button,xy) {
+    App.touch(button, xy);  
+  });
+
+  setInterval(function() {
+    CountdownScreen.tick();
+    StopwatchScreen.tick();
+
+    if (App.screen===MainScreen) {
+      MainScreen.draw();
+    }
+  },1000);
+
+  App.open(MainScreen);
+}
+
+init();
+
 /*
  * Example application: time display
  */
@@ -1757,7 +2337,6 @@ g.reset();
  * Startup
  */
 
-watch.init();
 
 function at_periodic() {
     print("at periodic");
@@ -1765,8 +2344,12 @@ function at_periodic() {
     watch.draw(); // FIXME: We want to do it periodically, and we want it after modem cycle ends
 }
 
-at_periodic();
-//var at_timer = setInterval(at_periodic, at.period);
+/* Phone stuff */
+if (0) {
+    watch.init();
+    at_periodic();
+    //var at_timer = setInterval(at_periodic, at.period);
+}
 
 // FIXME: There really should be ^@ at end of file, but that interferes with git
  
